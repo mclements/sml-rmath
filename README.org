@@ -1,0 +1,44 @@
+#+title: sml-rmath: SML library for the Rmath library with implementations in mlton and polyml
+
+#+OPTIONS: H:3 toc:nil num:nil
+
+This library uses =m4= to generate code to interface with the libRmath library.
+
+For installation in Poly/ML, the user may need to change the library path in rmath-polyml.sml.in; it is currently set to "/usr/lib/libRmath.so".
+
+Simple use is to run =make=, which generates the codes and compiles the tests.
+
+Feedback is more than welcome!
+
+#+BEGIN_SRC bash :exports both :results org
+cd ~/src/sml/sml-rmath
+echo NOTE: tidy up
+make clean 
+echo NOTE: code generation using m4 and compile test code
+make
+echo NOTE: run some tests
+make test
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+NOTE: tidy up
+rm -f rmath-mlton rmath-mlton.sml
+rm -f rmath-polyml rmath-polyml.sml
+NOTE: code generation using m4 and compile test code
+m4   rmath-polyml.sml.in > rmath-polyml.sml
+m4   rmath-mlton.sml.in > rmath-mlton.sml
+polyc -o rmath-polyml rmath-polyml.sml
+mlton -default-ann 'allowFFI true' -link-opt '-lRmath' rmath-mlton.sml
+NOTE: run some tests
+./rmath-polyml
+1.95996398454
+89
+911
+./rmath-mlton
+1.95996398454
+89
+911
+0.665693785434
+0.474611803353
+#+END_SRC
