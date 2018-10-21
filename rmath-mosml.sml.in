@@ -1,0 +1,88 @@
+divert(`-1')dnl
+define(`MosType',`ifelse($1,double,real,$1,int,int,UNKNOWN)')
+
+define(`CONSTANT',`(* $1 *)
+       val $2 : real')
+define(`FUNCTION0',`(* $1. $2() *)
+       val $2 : unit -> real')
+define(`FUNCTION1',`(* $1. $2($4) *)
+       val $2 : MosType($3) -> real')
+define(`FUNCTION2',`(* $1. $2($4,$6) *)
+       val $2 : MosType($3) * MosType($5) -> real')
+define(`FUNCTION3',`(* $1. $2($4,$6,$8) *)
+       val $2 : MosType($3) * MosType($5) * MosType($7) -> real')
+define(`FUNCTION4',`(* $1. $2($4,$6,$8,$10) *)
+       val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) -> real')
+define(`FUNCTION5',`(* $1. $2($4,$6,$8,$10,$12) *)
+       val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) -> real')
+define(`FUNCTION6',`(* $1. $2($4,$6,$8,$10,$12,$14) *)
+       val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) * MosType($13) -> real')
+
+define(`DIST1FUNCTION',`(* $1 distribution *)
+FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
+FUNCTION4($1 quantile function,q$2,double,p,double,$3,int,lower,int,log)
+FUNCTION3($1 probability density function,d$2,double,p,double,$3,int,log)
+FUNCTION1($1 random numbers,r$2,double,$3)')
+
+define(`DIST2FUNCTION',`(* $1 distribution *)
+FUNCTION5($1 cumulative density function,p$2,double,q,double,$3,double,$4,int,lower,int,log)
+FUNCTION5($1 quantile function,q$2,double,p,double,$3,double,$4,int,lower,int,log)
+FUNCTION4($1 probability density function,d$2,double,p,double,$3,double,$4,int,log)
+FUNCTION2($1 random numbers,r$2,double,$3,double,$4)')
+
+define(`DIST3FUNCTION',`(* $1 distribution *)
+FUNCTION6($1 cumulative density function,p$2,double,q,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
+FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
+
+divert(`1')dnl
+
+signature RMATH =
+sig
+datatype test_alternative = TwoSided | Less | Greater
+include(`rmath-template.m4')
+end
+
+divert(`-1')dnl
+define(`CONSTANT',`(* $1 *)
+val $2 = $3')
+
+define(`FUNCTION0',`(* $1 *)
+val $2 : unit -> real = app0 (dlsym dlh "r_$2")')
+
+define(`FUNCTION1',`(* $1 *)
+val $2 : MosType($3) -> real = app1 (dlsym dlh "r_$2")')
+
+define(`FUNCTION2',`(* $1 *)
+val $2 : MosType($3) * MosType($5) -> real = app2 (dlsym dlh "r_$2")')
+
+define(`FUNCTION3',`(* $1 *)
+val $2 : MosType($3) * MosType($5) * MosType($7) -> real = app3 (dlsym dlh "r_$2")')
+
+define(`FUNCTION4',`(* $1 *)
+val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) -> real = app4 (dlsym dlh "r_$2")')
+
+define(`FUNCTION5',`(* $1 *)
+val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) -> real = app5 (dlsym dlh "r_$2")')
+
+define(`FUNCTION6',`(* $1 *)
+val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) * MosType($13) -> real = app6 (dlsym dlh "r_$2")')
+divert(`1')dnl
+
+structure Rmath :> RMATH =
+struct
+open Foreign;
+datatype test_alternative = TwoSided | Less | Greater
+(* Load the Dynlib and FileSys structures from the Moscow ML library: *)
+app load ["Dynlib", "FileSys"];
+
+open Dynlib;
+
+(* Obtain a handle pointing to the library defining the C functions: *)
+val dlh = dlopen { lib = Path.concat(FileSys.getDir (), "librmath-mosml.so"),
+		 flag = RTLD_LAZY, 
+		 global = false }
+
+include(`rmath-template.m4')
+end

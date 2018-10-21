@@ -1,0 +1,91 @@
+#include <mlvalues.h>
+
+#ifdef WIN32
+#define EXTERNML __declspec(dllexport)
+#else
+#define EXTERNML
+#endif
+divert(`-1')dnl
+
+define(`MosRead',`ifelse($1,double,Double_val,$1,int,Long_val,UNKNOWN)')
+
+define(`MosWrite',`ifelse($1,double,copy_double,$1,int,Val_long,UNKNOWN)')
+
+define(`CONSTANT',`// constant $2 defined in SML code')
+
+define(`FUNCTION0',`// $1
+EXTERNML value r_$2() {
+  return copy_double($2($4));
+}')
+
+define(`FUNCTION1',`// $1
+EXTERNML value r_$2(value v) {
+  $3 $4 = MosRead($3)(v);
+  return copy_double($2($4));
+}')
+
+define(`FUNCTION2',`// $1
+EXTERNML value r_$2(value v) {
+  $3 $4 = MosRead($3)(Field(v, 0));
+  $5 $6 = MosRead($5)(Field(v, 1));
+  return copy_double($2($4,$6));
+}')
+
+define(`FUNCTION3',`// $1
+EXTERNML value r_$2(value v) {
+  $3 $4 = MosRead($3)(Field(v, 0));
+  $5 $6 = MosRead($5)(Field(v, 1));  
+  $7 $8 = MosRead($7)(Field(v, 2));
+  return copy_double($2($4,$6,$8));
+}')
+
+define(`FUNCTION4',`// $1
+EXTERNML value r_$2(value v) {
+  $3 $4 = MosRead($3)(Field(v, 0));
+  $5 $6 = MosRead($5)(Field(v, 1));  
+  $7 $8 = MosRead($7)(Field(v, 2));
+  $9 $10 = MosRead($9)(Field(v, 3));
+  return copy_double($2($4,$6,$8,$10));
+}')
+
+define(`FUNCTION5',`// $1
+EXTERNML value r_$2(value v) {
+  $3 $4 = MosRead($3)(Field(v, 0));
+  $5 $6 = MosRead($5)(Field(v, 1));  
+  $7 $8 = MosRead($7)(Field(v, 2));
+  $9 $10 = MosRead($9)(Field(v, 3));
+  $11 $12 = MosRead($11)(Field(v, 4));
+  return copy_double($2($4,$6,$8,$10,$12));
+}')
+
+define(`FUNCTION6',`// $1
+EXTERNML value r_$2(value v) {
+  $3 $4 = MosRead($3)(Field(v, 0));
+  $5 $6 = MosRead($5)(Field(v, 1));  
+  $7 $8 = MosRead($7)(Field(v, 2));
+  $9 $10 = MosRead($9)(Field(v, 3));
+  $11 $12 = MosRead($11)(Field(v, 4));
+  $13 $14 = MosRead($13)(Field(v, 5));
+  return copy_double($2($4,$6,$8,$10,$12,$14));
+}')
+
+define(`DIST1FUNCTION',`// $1 distribution
+FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
+FUNCTION4($1 quantile function,q$2,double,p,double,$3,int,lower,int,log)
+FUNCTION3($1 probability density function,d$2,double,p,double,$3,int,log)
+FUNCTION1($1 random numbers,r$2,double,$3)')
+
+define(`DIST2FUNCTION',`// $1 distribution
+FUNCTION5($1 cumulative density function,p$2,double,q,double,$3,double,$4,int,lower,int,log)
+FUNCTION5($1 quantile function,q$2,double,p,double,$3,double,$4,int,lower,int,log)
+FUNCTION4($1 probability density function,d$2,double,p,double,$3,double,$4,int,log)
+FUNCTION2($1 random numbers,r$2,double,$3,double,$4)')
+
+define(`DIST3FUNCTION',`// $1 distribution
+FUNCTION6($1 cumulative density function,p$2,double,q,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
+FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
+
+divert(`1')dnl
+include(`rmath-template.m4')
