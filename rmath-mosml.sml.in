@@ -1,3 +1,5 @@
+(* Load the Dynlib and FileSys structures from the Moscow ML library: *)
+app load ["Dynlib", "FileSys"];
 divert(`-1')dnl
 define(`MosType',`ifelse($1,double,real,$1,int,int,UNKNOWN)')
 
@@ -37,52 +39,127 @@ FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,doubl
 FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
 
 divert(`1')dnl
-
 signature RMATH =
 sig
 datatype test_alternative = TwoSided | Less | Greater
 include(`rmath-template.m4')
+val qnorm : real * real * real * int * int -> real
+val pnorm : real * real * real * int * int -> real
+val dnorm : real * real * real * int -> real
+val get_seed : unit -> int * int
+val set_seed : int * int -> unit
+(* some additional functions *)
+val poisson_ci : real * real * test_alternative -> real * real
+val poisson_test : real * real * real * test_alternative -> real
 end
-
 divert(`-1')dnl
 define(`CONSTANT',`(* $1 *)
 val $2 = $3')
 
 define(`FUNCTION0',`(* $1 *)
-val $2 : unit -> real = app0 (dlsym dlh "r_$2")')
+val $2 : unit -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION1',`(* $1 *)
 val $2 : MosType($3) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION2',`(* $1 *)
-val $2 : MosType($3) * MosType($5) -> real = app2 (dlsym dlh "r_$2")')
+val $2 : MosType($3) * MosType($5) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION3',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) -> real = app3 (dlsym dlh "r_$2")')
+val $2 : MosType($3) * MosType($5) * MosType($7) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION4',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) -> real = app4 (dlsym dlh "r_$2")')
+val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION5',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) -> real = app5 (dlsym dlh "r_$2")')
+val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION6',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) * MosType($13) -> real = app6 (dlsym dlh "r_$2")')
+val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) * MosType($13) -> real = app1 (dlsym dlh "r_$2")')
 divert(`1')dnl
-
 structure Rmath :> RMATH =
 struct
-open Foreign;
 datatype test_alternative = TwoSided | Less | Greater
-(* Load the Dynlib and FileSys structures from the Moscow ML library: *)
-app load ["Dynlib", "FileSys"];
-
 open Dynlib;
-
 (* Obtain a handle pointing to the library defining the C functions: *)
 val dlh = dlopen { lib = Path.concat(FileSys.getDir (), "librmath-mosml.so"),
 		 flag = RTLD_LAZY, 
 		 global = false }
-
 include(`rmath-template.m4')
+val qnorm = qnorm5
+val pnorm = pnorm5
+val dnorm = dnorm4
+val set_seed : int * int -> unit = app1 (dlsym dlh "r_set_seed")
+val get_seed : unit -> int * int = app1 (dlsym dlh "r_get_seed")
+(* additional functions *)
+fun for f init (from, to) =
+    let
+	fun loop(i,y) = if i>to then y else loop(i+1,f(i,y))
+    in
+	loop(from,init)
+    end
+fun sum f = for (fn (i, y) => Real.+(f(real(i)),y)) 0.0
+fun sum f = for (fn (i, y) => f(i)+y) 0
+fun count predicate = for (fn (i, y) => if predicate(i) then y+1 else y) 0
+fun poisson_ci(x, conflevel, alternative) =
+    let
+	val alpha = (1.0-conflevel)/2.0
+	fun pL(x,alpha) = if Real.==(x,0.0) then 0.0 else qgamma(alpha,x, 1.0, 1, 0)
+	fun pU(x,alpha) = qgamma(1.0-alpha, x+1.0, 1.0, 1, 0)
+    in
+	case alternative of
+	    Less => (0.0, pU(x, 1.0-conflevel))
+	  | Greater => (pL(x, 1.0-conflevel), 1.0E200)
+	  | TwoSided => (pL(x,alpha), pU(x,alpha))
+    end
+fun poisson_test(x, t, r, alternative) =
+    let
+	val m = r*t
+    in
+	case alternative of
+	    Less => ppois(x,m,1,0)
+	  | Greater => ppois(x-1.0,m,0,0)
+	  | TwoSided =>
+	    if Real.==(m,0.0) then (if Real.==(x,0.0) then 1.0 else 0.0)
+	    else
+		let
+		    val relErr = 1.0 + 1.0e~7
+		    val d = dpois(x,m,0)
+		    val dstar = d * relErr
+		    fun pred i = dpois(real(i),m,0)<=dstar
+		in
+		    if Real.==(x,m) then 1.0
+		    else if x<m then
+			let
+			    fun loop n = if dpois(real(n),m,0)>d then loop(n*2) else n
+			    val n = loop(Real.ceil(2.0*m-x))
+			    val y = count pred (Real.ceil(m), n)
+			in
+			    ppois(x,m,1,0) + ppois(real(n-y),m,0,0)
+			end
+		    else (* x>m *)
+			let
+			    val y = count pred (0,Real.floor(m))
+			in
+			    ppois(real(y-1),m,1,0) + ppois(x-1.0, m,0,0)
+			end
+		end
+    end
 end
+
+fun main() =
+let
+    val x = Rmath.qnorm(0.975,0.0,1.0,1,0);
+    val _ = print(Real.toString(x) ^"\n")
+    (* val prob = Array.fromList [0.1,0.9] *)
+    (* val y = Rmath.rmultinom(1000,prob) *)
+    (* val _ = print(Int.toString(Array.sub(y,0)) ^"\n") *)
+    (* val _ = print(Int.toString(Array.sub(y,1)) ^"\n") *)
+    val x = Rmath.poisson_test(10.0,12.0,1.0, Rmath.TwoSided)
+    val _ = print(Real.toString(x) ^"\n")
+    val x = Rmath.poisson_test(10.0,8.0,1.0, Rmath.TwoSided)
+    val _ = print(Real.toString(x) ^"\n")
+in
+    true
+end
+val _ = main();
