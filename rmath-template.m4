@@ -27,7 +27,7 @@ FUNCTION2(R_pow_di function,R_pow_di,double,x,int,y)
 FUNCTION0(Normal random numbers,norm_rand)
 FUNCTION0(Uniform random numbers,unif_rand)
 FUNCTION0(Exponential random numbers,exp_rand)
-FUNCTION2(Set random seed,set_seed,int,a,int,b)
+dnl FUNCTION2(Set random seed,set_seed,int,a,int,b)
 dnl void get_seed(unsigned int *, unsigned int *) // polyml
 FUNCTION5(Normal cumulative density function,pnorm5,double,q,double,mean,double,sd,int,lower,int,log)
 FUNCTION5(Normal quantile function,qnorm5,double,p,double,mean,double,sd,int,lower,int,log)

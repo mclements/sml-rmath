@@ -53,13 +53,16 @@ signature RMATH =
 sig
 datatype test_alternative = TwoSided | Less | Greater
 include(`rmath-template.m4')
+(* imax2. imax2(a,b) *)
 val imax2 : int * int -> int
+(* imin2. imin2(a,b) *)
 val imin2 : int * int -> int
 val log1pexp : real -> real
 val qnorm : real * real * real * int * int -> real
 val pnorm : real * real * real * int * int -> real
 val dnorm : real * real * real * int -> real
 val get_seed : unit -> int * int
+val set_seed : int * int -> unit
 val rmultinom : int * real Array.array -> int Array.array
 val lgammafn_sign : real -> real * int
 (* some additional functions *)
@@ -84,6 +87,7 @@ datatype test_alternative = TwoSided | Less | Greater
 include(`rmath-template.m4')
 val imax2 = _import "imax2" public: int * int -> int;
 val imin2 = _import "imin2" public: int * int -> int;
+val set_seed = _import "set_seed" public: int * int -> unit;
 val log1pexp = Rf_log1pexp
 val qnorm = qnorm5
 val pnorm = pnorm5

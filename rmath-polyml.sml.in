@@ -72,6 +72,7 @@ val qnorm : real * real * real * int * int -> real
 val pnorm : real * real * real * int * int -> real
 val dnorm : real * real * real * int -> real
 val get_seed : unit -> int * int
+val set_seed : int * int -> unit
 val rmultinom : int * real Array.array -> int Array.array
 val lgammafn_sign : real -> real * int
 (* some additional functions *)
@@ -98,6 +99,7 @@ val lib = loadLibrary "/usr/lib/libRmath.so";
 include(`rmath-template.m4')
 val imax2 = buildCall2((getSymbol lib "imax2"), (cInt, cInt), cInt)
 val imin2 = buildCall2((getSymbol lib "imin2"), (cInt, cInt), cInt)
+val set_seed = buildCall2((getSymbol lib "set_seed"), (cInt, cInt), cVoid)
 val log1pexp = Rf_log1pexp
 val qnorm = qnorm5
 val pnorm = pnorm5
