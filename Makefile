@@ -3,9 +3,16 @@
 M4       = m4
 M4FLAGS  =
 M4SCRIPT =
+
+# User-defined value(s) for mosml
 CFLAGS  += -I/usr/local/include/mosml -fPIC
 CFLAGS  += $(shell pkg-config --cflags libRmath)
 LDFLAGS += $(shell pkg-config --libs libRmath)
+
+# User-defined value(s) for polyml
+LIBRMATH = "/usr/lib/libRmath.so"
+
+# --- you shouldn't need to edit below this line ---
 
 all: mlton polyml mosml
 

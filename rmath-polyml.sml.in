@@ -5,7 +5,6 @@
 (* Copyright 2018 Mark Clements *)
 
 divert(`-1')
-define(`LIBRMATH',`"/usr/lib/libRmath.so"')
 define(`FTYPE',`dnl
 ifelse($1,unsigned int,cUint,
 $1,int,cInt,
@@ -96,7 +95,7 @@ structure Rmath :> RMATH =
 struct
 open Foreign;
 datatype test_alternative = TwoSided | Less | Greater
-val lib = loadLibrary LIBRMATH;
+val lib = loadLibrary "LIBRMATH";
 include(`rmath-template.m4')
 val imax2 = buildCall2((getSymbol lib "imax2"), (cInt, cInt), cInt)
 val imin2 = buildCall2((getSymbol lib "imin2"), (cInt, cInt), cInt)
