@@ -52,10 +52,10 @@ test-mlton: mlton test-main.sml test-call-main.sml test-mlton.mlb
 	./test-mlton
 	rm test-mlton
 
-test-polyml: rmath-polyml.sml test-polyml.sml
+test-polyml: polyml test-polyml.sml test-main.sml
 	poly --script test-polyml.sml
 
-test-mosml: librmath-mosml.so test-mosml.sml
+test-mosml: mosml test-mosml.sml test-main.sml
 	mosml test-mosml.sml
 
 test: test-mlton test-polyml test-mosml 
