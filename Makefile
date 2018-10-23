@@ -5,15 +5,21 @@ M4FLAGS  =
 M4SCRIPT =
 
 # User-defined value(s) for mosml
-DLLNAME  = librmath-mosml.so
 CFLAGS  += -I/usr/local/include/mosml
+
+# --- you shouldn't need to edit below this line ---
+
 CFLAGS  += $(shell pkg-config --cflags libRmath) -fPIC
 LDFLAGS += $(shell pkg-config --libs libRmath)
 
-# User-defined value(s) for polyml
-LIBRMATH = "/usr/lib/libRmath.so"
+ifeq ($(OS),Windows_NT)
+    DLLEXT := .dll
+else
+    DLLEXT := .so
+endif
 
-# --- you shouldn't need to edit below this line ---
+LIBRMATH = $(shell pkg-config --variable=libdir libRmath)/libRmath$(DLLEXT)
+DLLNAME := librmath-mosml$(DLLEXT)
 
 all: mlton polyml mosml
 
