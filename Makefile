@@ -22,13 +22,22 @@ all: mlton polyml mosml
 .in:
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*
 
-mlton: rmath-template.m4 rmath-mlton.sml
+mlton: rmath-mlton
+
+rmath-mlton: rmath-template.m4 rmath-mlton.sml
 	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' rmath-mlton.sml
 
-polyml: rmath-template.m4 rmath-polyml.sml
+polyml: rmath-polyml
+
+rmath-polyml: rmath-polyml.sml
 	polyc -o rmath-polyml rmath-polyml.sml
 
-mosml: rmath-template.m4 rmath-mosml.sml rmath-mosml.c
+rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
+	${M4} ${M4FLAGS} ${M4SCRIPT} -D LIBRMATH=${LIBRMATH} rmath-polyml.sml.in > rmath-polyml.sml
+
+mosml: librmath-mosml.so
+
+librmath-mosml.so: rmath-template.m4 rmath-mosml.sml rmath-mosml.c
 	${CC} ${CFLAGS} -shared -o librmath-mosml.so rmath-mosml.c ${LDFLAGS}
 
 test:
