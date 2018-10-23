@@ -82,7 +82,7 @@ struct
 datatype test_alternative = TwoSided | Less | Greater
 open Dynlib;
 (* Obtain a handle pointing to the library defining the C functions: *)
-val dlh = dlopen { lib = Path.concat(FileSys.getDir (), "librmath-mosml.so"),
+val dlh = dlopen { lib = Path.concat(FileSys.getDir (), "DLLNAME"),
 		 flag = RTLD_LAZY, 
 		 global = false }
 include(`rmath-template.m4')

@@ -5,8 +5,9 @@ M4FLAGS  =
 M4SCRIPT =
 
 # User-defined value(s) for mosml
-CFLAGS  += -I/usr/local/include/mosml -fPIC
-CFLAGS  += $(shell pkg-config --cflags libRmath)
+DLLNAME  = librmath-mosml.so
+CFLAGS  += -I/usr/local/include/mosml
+CFLAGS  += $(shell pkg-config --cflags libRmath) -fPIC
 LDFLAGS += $(shell pkg-config --libs libRmath)
 
 # User-defined value(s) for polyml
@@ -37,8 +38,11 @@ rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
 
 mosml: librmath-mosml.so
 
-librmath-mosml.so: rmath-template.m4 rmath-mosml.sml rmath-mosml.c
-	${CC} ${CFLAGS} -shared -o librmath-mosml.so rmath-mosml.c ${LDFLAGS}
+librmath-mosml.so: rmath-mosml.c rmath-mosml.sml
+	${CC} ${CFLAGS} -shared -o ${DLLNAME} rmath-mosml.c ${LDFLAGS}
+
+rmath-mosml.sml: rmath-template.m4 rmath-mosml.sml.in
+	${M4} ${M4FLAGS} ${M4SCRIPT} -D DLLNAME=${DLLNAME} rmath-mosml.sml.in > rmath-mosml.sml
 
 test:
 	./rmath-polyml
