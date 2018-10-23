@@ -50,12 +50,13 @@ rmath-mosml.sml: rmath-template.m4 rmath-mosml.sml.in
 test-mlton: mlton test-main.sml test-call-main.sml test-mlton.mlb
 	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
 	./test-mlton
+	rm test-mlton
 
 test-polyml: rmath-polyml.sml test-polyml.sml
 	poly --script test-polyml.sml
 
-test-mosml: mosml test-main.sml test-call-main.sml
-	mosml rmath-mosml.sml test-main.sml test-call-main.sml quit.sml
+test-mosml: librmath-mosml.so test-mosml.sml
+	mosml test-mosml.sml
 
 test: test-mlton test-polyml test-mosml 
 
