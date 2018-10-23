@@ -4,12 +4,11 @@
 
 This library uses =m4= to generate code to interface with the libRmath library.
 
-For installation in Poly/ML, the user may need to change the library path in the Makefile; it is currently set to "/usr/lib/libRmath.so". For installation in MosML, the user may need to change the path to the headers for MosML (currently "/usr/local/include/mosml") and the name of resulting library file (currently "librmath-mosml.so").
+For installation in MosML, the user may need to change the path to the headers for MosML (currently "/usr/local/include/mosml").
 
 Simple use is to run =make=, which generates the codes, and =make test= to run the tests.
 
-A handful of the functions (=rmultinom=, =lgammafn_sign=) are not currently available for MosML.
-
+A handful of functions (=rmultinom=, =lgammafn_sign=) are not currently available for MosML.
 
 Feedback is more than welcome!
 

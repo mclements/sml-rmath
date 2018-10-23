@@ -21,6 +21,7 @@ endif
 LIBRMATH = $(shell pkg-config --variable=libdir libRmath)/libRmath$(DLLEXT)
 DLLNAME := librmath-mosml$(DLLEXT)
 
+
 all: mlton polyml mosml
 
 %.c: %.c.in
@@ -29,15 +30,9 @@ all: mlton polyml mosml
 .in:
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*
 
-mlton: rmath-mlton
+mlton: rmath-template.m4 rmath-mlton.sml
 
-rmath-mlton: rmath-template.m4 rmath-mlton.sml
-	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' rmath-mlton.sml
-
-polyml: rmath-polyml
-
-rmath-polyml: rmath-polyml.sml
-	polyc -o rmath-polyml rmath-polyml.sml
+polyml: rmath-polyml.sml
 
 rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D LIBRMATH=${LIBRMATH} rmath-polyml.sml.in > rmath-polyml.sml
@@ -50,10 +45,19 @@ librmath-mosml.so: rmath-mosml.c rmath-mosml.sml
 rmath-mosml.sml: rmath-template.m4 rmath-mosml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D DLLNAME=${DLLNAME} rmath-mosml.sml.in > rmath-mosml.sml
 
-test:
-	./rmath-polyml
-	./rmath-mlton
-	mosml rmath-mosml.sml
+# testing
+
+test-mlton: mlton test-main.sml test-call-main.sml test-mlton.mlb
+	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
+	./test-mlton
+
+test-polyml: rmath-polyml.sml test-polyml.sml
+	poly --script test-polyml.sml
+
+test-mosml: mosml test-main.sml test-call-main.sml
+	mosml rmath-mosml.sml test-main.sml test-call-main.sml quit.sml
+
+test: test-mlton test-polyml test-mosml 
 
 clean:
 	rm -f rmath-mlton rmath-mlton.sml

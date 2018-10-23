@@ -1,0 +1,7 @@
+local
+    $(SML_LIB)/basis/basis.mlb
+    rmath-mlton.sml
+    test-main.sml
+in
+    test-call-main.sml
+end
