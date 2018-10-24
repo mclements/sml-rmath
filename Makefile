@@ -56,7 +56,7 @@ test-polyml: polyml test-polyml.sml test-main.sml
 	poly --script test-polyml.sml
 
 test-mosml: mosml test-mosml.sml test-main.sml
-	mosml test-mosml.sml
+	mosml -quietdec test-mosml.sml
 
 test: test-mlton test-polyml test-mosml 
 
