@@ -1,0 +1,210 @@
+(* This Source Code Form is subject to the terms of the Mozilla Public *)
+(* License, v. 2.0.  If a copy of the MPL was not distributed with this *)
+(* file, You can obtain one at http://mozilla.org/MPL/2.0/. *)
+											      
+(* Copyright 2018 Mark Clements *)
+
+divert(`-1')
+define(`TYPE',`dnl
+ifelse($1,char,char,
+$1,unsigned char,word8,
+$1,int,int,
+$1,unsigned int,word,
+$1,unsigned short,word,
+$1,short,int,
+$1,unsigned long,word,
+$1,long,int,
+$1,double,real,
+$1,float,Real32.real,
+$1,void *,ref,
+$1)')
+define(`DIST1FUNCTION',`(* $1 distribution *)
+FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
+FUNCTION4($1 quantile function,q$2,double,p,double,$3,int,lower,int,log)
+FUNCTION3($1 probability density function,d$2,double,p,double,$3,int,log)
+FUNCTION1($1 random numbers,r$2,double,$3)')
+define(`DIST2FUNCTION',`(* $1 distribution *)
+FUNCTION5($1 cumulative density function,p$2,double,q,double,$3,double,$4,int,lower,int,log)
+FUNCTION5($1 quantile function,q$2,double,p,double,$3,double,$4,int,lower,int,log)
+FUNCTION4($1 probability density function,d$2,double,p,double,$3,double,$4,int,log)
+FUNCTION2($1 random numbers,r$2,double,$3,double,$4)')
+define(`DIST3FUNCTION',`(* $1 distribution *)
+FUNCTION6($1 cumulative density function,p$2,double,q,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
+FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
+define(`CONSTANT',`(* $1 *)
+       val $2 : real')
+define(`FUNCTION0',`(* $1. $2() *)
+       val $2 : unit -> real')
+define(`FUNCTION1',`(* $1. $2($4) *)
+       val $2 : TYPE($3) -> real')
+define(`FUNCTION2',`(* $1. $2($4,$6): TYPE($3) * TYPE($5) -> real *)
+       val $2 : TYPE($3) * TYPE($5) -> real')
+define(`FUNCTION3',`(* $1. $2($4,$6,$8) *)
+       val $2 : TYPE($3) * TYPE($5) * TYPE($7) -> real')
+define(`FUNCTION4',`(* $1. $2($4,$6,$8,$10) *)
+       val $2 : TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) -> real')
+define(`FUNCTION5',`(* $1. $2($4,$6,$8,$10,$12) *)
+       val $2 : TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) -> real')
+define(`FUNCTION6',`(* $1. $2($4,$6,$8,$10,$12,$14) *)
+       val $2 : TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) * TYPE($13) -> real')
+divert(`1')dnl
+
+signature RMATH =
+sig
+datatype test_alternative = TwoSided | Less | Greater
+include(`rmath-template.m4')
+(* imax2. imax2(a,b) *)
+val imax2 : int * int -> int
+(* imin2. imin2(a,b) *)
+val imin2 : int * int -> int
+val log1pexp : real -> real
+val qnorm : real * real * real * int * int -> real
+val pnorm : real * real * real * int * int -> real
+val dnorm : real * real * real * int -> real
+val get_seed : unit -> int * int
+val set_seed : int * int -> unit
+val rmultinom : int * real Array.array -> int Array.array
+val lgammafn_sign : real -> real * int
+(* some additional functions *)
+val poisson_ci : real * real * test_alternative -> real * real
+val poisson_test : real * real * real * test_alternative -> real
+end
+
+divert(`-1')
+define(`CONSTANT',`val $2 = $3')
+define(`FUNCTION0',`val $2 = _import "$2": () -> real;')
+define(`FUNCTION1',`val $2 = _import "$2": TYPE($3) -> real;')
+define(`FUNCTION2',`val $2 = _import "$2": TYPE($3) * TYPE($5) -> real;')
+define(`FUNCTION3',`val $2 = _import "$2": TYPE($3) * TYPE($5) * TYPE($7) -> real;')
+define(`FUNCTION4',`val $2 = _import "$2": TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) -> real;')
+define(`FUNCTION5',`val $2 = _import "$2": TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) -> real;')
+define(`FUNCTION6',`val $2 = _import "$2": TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) * TYPE($13) -> real;')
+divert(`1')dnl
+
+structure Rmath :> RMATH =
+struct
+datatype test_alternative = TwoSided | Less | Greater
+include(`rmath-template.m4')
+val imax2 = _import "imax2": int * int -> int;
+val imin2 = _import "imin2": int * int -> int;
+val set_seed = _import "set_seed": int * int -> ();
+val log1pexp = Rf_log1pexp
+val qnorm = qnorm5
+val pnorm = pnorm5
+val dnorm = dnorm4
+local
+    val get_seed_call = _import "get_seed": int ref * int ref -> ();
+    val rmultinom_call = _import "rmultinom" : int * real Vector.vector * int * int Array.array -> ();
+    val lgammafn_sign_call = _import "lgammafn_sign": real * int ref -> real;
+in
+fun get_seed() =
+    let
+	val seed1 = ref 1
+	and seed2 = ref 1
+	val _ = get_seed_call(seed1, seed2)
+    in
+	(!seed1, !seed2)
+    end
+fun rmultinom(n : int, prob : real Array.array) =
+    let
+	val k = Array.length prob
+	val vprob = Vector.tabulate(k, fn i => Array.sub(prob,i))
+	val rN = Array.array(k, 0)
+	val _ = rmultinom_call(n, vprob, k, rN)
+    in
+	rN
+    end
+fun lgammafn_sign(x) =
+    let
+	val sign = ref 0
+	val y = lgammafn_sign_call(x, sign)
+    in
+	(y, !sign)
+    end
+end
+(* additional functions *)
+fun poisson_ci(x, conflevel, alternative) =
+    let
+	val alpha = (1.0-conflevel)/2.0
+	fun pL(x,alpha) = if Real.==(x,0.0) then 0.0 else qgamma(alpha,x, 1.0, 1, 0)
+	fun pU(x,alpha) = qgamma(1.0-alpha, x+1.0, 1.0, 1, 0)
+    in
+	case alternative of
+	    Less => (0.0, pU(x, 1.0-conflevel))
+	  | Greater => (pL(x, 1.0-conflevel), Real.posInf)
+	  | TwoSided => (pL(x,alpha), pU(x,alpha))
+    end
+fun id x = x
+(* operations on ranges from..to *)
+fun seq_list(from,to) =
+    let
+	fun loop(i,y) = if i>to then y else loop(i+1,i :: y)
+    in
+	List.rev(loop(from,[]))
+    end
+(* infix -- *)
+(* fun a -- b = seq_list(a,b) *)
+fun tabulate f (from,to) = List.tabulate(to-from+1,fn i => f(i+from))
+fun for f init (from, to) =
+    let
+	fun loop(i,y) = if i>to then y else loop(i+1,f(i,y))
+    in
+	loop(from,init)
+    end
+fun sum f = for (fn (i, y) => Real.+(f(real(i)),y)) 0.0
+fun sum f = for (fn (i, y) => f(i)+y) 0
+fun count predicate = for (fn (i, y) => if predicate(i) then y+1 else y) 0
+fun poisson_test(x, t, r, alternative) =
+    let
+	val m = r*t
+    in
+	case alternative of
+	    Less => ppois(x,m,1,0)
+	  | Greater => ppois(x-1.0,m,0,0)
+	  | TwoSided =>
+	    if Real.==(m,0.0) then (if Real.==(x,0.0) then 1.0 else 0.0)
+	    else
+		let
+		    val relErr = 1.0 + 1.0e~7
+		    val d = dpois(x,m,0)
+		    val dstar = d * relErr
+		    fun pred i = dpois(real(i),m,0)<=dstar
+		in
+		    if Real.==(x,m) then 1.0
+		    else if x<m then
+			let
+			    fun loop n = if dpois(real(n),m,0)>d then loop(n*2) else n
+			    val n = loop(Real.ceil(2.0*m-x))
+			    val y = count pred (Real.ceil(m), n)
+			in
+			    ppois(x,m,1,0) + ppois(real(n-y),m,0,0)
+			end
+		    else (* x>m *)
+			let
+			    val y = count pred (0,Real.floor(m))
+			in
+			    ppois(real(y-1),m,1,0) + ppois(x-1.0, m,0,0)
+			end
+		end
+    end
+end;
+
+fun main() =
+let
+    val x = Rmath.qnorm(0.975,0.0,1.0,1,0);
+    val _ = print(Real.toString(x) ^"\n")
+    (* val prob = Array.fromList [0.1,0.9] *)
+    (* val y = Rmath.rmultinom(1000,prob) *)
+    (* val _ = print(Int.toString(Array.sub(y,0)) ^"\n") *)
+    (* val _ = print(Int.toString(Array.sub(y,1)) ^"\n") *)
+    val x = Rmath.poisson_test(10.0,12.0,1.0, Rmath.TwoSided)
+    val _ = print(Real.toString(x) ^"\n")
+    val x = Rmath.poisson_test(10.0,8.0,1.0, Rmath.TwoSided)
+    val _ = print(Real.toString(x) ^"\n")
+in
+    true
+end
+
+val _ = main();

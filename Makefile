@@ -37,6 +37,8 @@ polyml: rmath-polyml.sml
 rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D LIBRMATH=${LIBRMATH} rmath-polyml.sml.in > rmath-polyml.sml
 
+smlsharp: rmath-template.m4 rmath-smlsharp.sml
+
 mosml: librmath-mosml.so
 
 librmath-mosml.so: rmath-mosml.c rmath-mosml.sml
