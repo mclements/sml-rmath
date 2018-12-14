@@ -40,11 +40,13 @@ rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
 
 smlsharp: rmath-smlsharp.o
 
+# sub-task for smlsharp
 rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.sml rmath-smlsharp.smi rmath-smlsharp.sml
 	smlsharp -c -o $@ rmath-smlsharp.sml
 
 mosml: librmath-mosml.so
 
+# sub-tasks for mosml
 librmath-mosml.so: rmath-mosml.c rmath-mosml.sml
 	${CC} ${CFLAGS} -shared -o ${DLLNAME} rmath-mosml.c ${LDFLAGS}
 
@@ -52,6 +54,8 @@ rmath-mosml.sml: rmath-template.m4 rmath-mosml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D DLLNAME=${DLLNAME} rmath-mosml.sml.in > rmath-mosml.sml
 
 # testing
+
+test-all: test-mlton test-polyml test-mosml test-smlsharp
 
 test-mlton: mlton test-main.sml test-call-main.sml test-mlton.mlb
 	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
@@ -69,13 +73,12 @@ test-smlsharp: smlsharp test-smlsharp.sml test-main.o test-smlsharp.o
 	./test-smlsharp
 	rm test-smlsharp
 
+# sub-tasks for smlsharp
 test-main.o: test-main.sml test-main.smi
 	smlsharp -c -o $@ test-main.sml
 
 test-smlsharp.o: test-smlsharp.sml test-smlsharp.smi
 	smlsharp -c -o $@ test-smlsharp.sml
-
-test-all: test-mlton test-polyml test-mosml test-smlsharp
 
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
