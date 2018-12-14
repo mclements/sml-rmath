@@ -11,3 +11,7 @@ auto
 *.o
 rmath-mosml.sml
 rmath-mosml.c
+rmath-smlsharp.sml
+rmath-smlsharp.smi
+scratch.sml
+a.out
