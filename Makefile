@@ -37,7 +37,10 @@ polyml: rmath-polyml.sml
 rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D LIBRMATH=${LIBRMATH} rmath-polyml.sml.in > rmath-polyml.sml
 
-smlsharp: rmath-template.m4 rmath-smlsharp.sml
+smlsharp: rmath-smlsharp.o
+
+rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.sml rmath-smlsharp.smi rmath-smlsharp.sml
+	smlsharp -c -o $@ rmath-smlsharp.sml
 
 mosml: librmath-mosml.so
 
@@ -59,6 +62,13 @@ test-polyml: polyml test-polyml.sml test-main.sml
 
 test-mosml: mosml test-mosml.sml test-main.sml
 	mosml -quietdec test-mosml.sml
+
+test-smlsharp: smlsharp test-smlsharp.sml
+	smlsharp -c -o test-main.o test-main.sml
+	smlsharp -c -o test-smlsharp.o test-smlsharp.sml
+	smlsharp -o test-smlsharp test-smlsharp.smi ${LDFLAGS}
+	./test-smlsharp
+	rm test-smlsharp
 
 test: test-mlton test-polyml test-mosml 
 

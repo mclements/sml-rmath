@@ -1,0 +1,74 @@
+(* This Source Code Form is subject to the terms of the Mozilla Public *)
+(* License, v. 2.0.  If a copy of the MPL was not distributed with this *)
+(* file, You can obtain one at http://mozilla.org/MPL/2.0/. *)
+
+(* Copyright 2018 Mark Clements *)
+
+_require "basis.smi"
+divert(`-1')
+define(`TYPE',`dnl
+ifelse($1,char,char,
+$1,unsigned char,word8,
+$1,int,int,
+$1,unsigned int,word,
+$1,unsigned short,word,
+$1,short,int,
+$1,unsigned long,word,
+$1,long,int,
+$1,double,real,
+$1,float,Real32.real,
+$1,void *,ref,
+$1)')
+define(`DIST1FUNCTION',`(* $1 distribution *)
+FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
+FUNCTION4($1 quantile function,q$2,double,p,double,$3,int,lower,int,log)
+FUNCTION3($1 probability density function,d$2,double,p,double,$3,int,log)
+FUNCTION1($1 random numbers,r$2,double,$3)')
+define(`DIST2FUNCTION',`(* $1 distribution *)
+FUNCTION5($1 cumulative density function,p$2,double,q,double,$3,double,$4,int,lower,int,log)
+FUNCTION5($1 quantile function,q$2,double,p,double,$3,double,$4,int,lower,int,log)
+FUNCTION4($1 probability density function,d$2,double,p,double,$3,double,$4,int,log)
+FUNCTION2($1 random numbers,r$2,double,$3,double,$4)')
+define(`DIST3FUNCTION',`(* $1 distribution *)
+FUNCTION6($1 cumulative density function,p$2,double,q,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
+FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
+define(`CONSTANT',`(* $1 *)
+       val $2 : real')
+define(`FUNCTION0',`(* $1. $2() *)
+       val $2 : unit -> real')
+define(`FUNCTION1',`(* $1. $2($4) *)
+       val $2 : TYPE($3) -> real')
+define(`FUNCTION2',`(* $1. $2($4,$6): TYPE($3) * TYPE($5) -> real *)
+       val $2 : (TYPE($3) * TYPE($5)) -> real')
+define(`FUNCTION3',`(* $1. $2($4,$6,$8) *)
+       val $2 : (TYPE($3) * TYPE($5) * TYPE($7)) -> real')
+define(`FUNCTION4',`(* $1. $2($4,$6,$8,$10) *)
+       val $2 : (TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9)) -> real')
+define(`FUNCTION5',`(* $1. $2($4,$6,$8,$10,$12) *)
+       val $2 : (TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11)) -> real')
+define(`FUNCTION6',`(* $1. $2($4,$6,$8,$10,$12,$14) *)
+       val $2 : (TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) * TYPE($13)) -> real')
+divert(`1')dnl
+
+structure Rmath =
+struct
+datatype test_alternative = TwoSided | Less | Greater
+include(`rmath-template.m4')
+(* imax2. imax2(a,b) *)
+val imax2 : int * int -> int
+(* imin2. imin2(a,b) *)
+val imin2 : int * int -> int
+val log1pexp : real -> real
+val qnorm : real * real * real * int * int -> real
+val pnorm : real * real * real * int * int -> real
+val dnorm : real * real * real * int -> real
+val get_seed : unit -> int * int
+val set_seed : int * int -> unit
+val rmultinom : int * real Array.array -> int Array.array
+val lgammafn_sign : real -> real * int
+(* some additional functions *)
+val poisson_ci : real * real * test_alternative -> real * real
+val poisson_test : real * real * real * test_alternative -> real
+end
