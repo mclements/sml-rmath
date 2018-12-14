@@ -22,7 +22,8 @@ LIBRMATH = $(shell pkg-config --variable=libdir libRmath)/libRmath$(DLLEXT)
 DLLNAME := librmath-mosml$(DLLEXT)
 
 
-all: mlton polyml mosml
+all:
+	@echo Available tasks include: test-all test-mlton test-polyml test-mosml test-smlsharp 
 
 %.c: %.c.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*.c
@@ -63,16 +64,21 @@ test-polyml: polyml test-polyml.sml test-main.sml
 test-mosml: mosml test-mosml.sml test-main.sml
 	mosml -quietdec test-mosml.sml
 
-test-smlsharp: smlsharp test-smlsharp.sml
-	smlsharp -c -o test-main.o test-main.sml
-	smlsharp -c -o test-smlsharp.o test-smlsharp.sml
+test-smlsharp: smlsharp test-smlsharp.sml test-main.o test-smlsharp.o
 	smlsharp -o test-smlsharp test-smlsharp.smi ${LDFLAGS}
 	./test-smlsharp
 	rm test-smlsharp
 
-test: test-mlton test-polyml test-mosml 
+test-main.o: test-main.sml test-main.smi
+	smlsharp -c -o $@ test-main.sml
+
+test-smlsharp.o: test-smlsharp.sml test-smlsharp.smi
+	smlsharp -c -o $@ test-smlsharp.sml
+
+test-all: test-mlton test-polyml test-mosml test-smlsharp
 
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
 	rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
+	rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
