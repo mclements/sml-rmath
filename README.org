@@ -1,4 +1,4 @@
-#+title: sml-rmath: SML library for the Rmath library with implementations in mlton, polyml and mosml
+#+title: sml-rmath: SML library for the Rmath library with implementations in mlton, polyml, mosml and sml#
 
 #+OPTIONS: H:3 toc:nil num:nil
 
@@ -6,17 +6,15 @@ This library uses [[https://www.gnu.org/software/m4/m4.html][m4]] to generate co
 
 For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=).
 
-The code is generated using =make=. The tests are run using =make test=. See below for an example. The signature for [[http://mlton.org/][Mlton]] is given below. A handful of functions (=rmultinom=, =lgammafn_sign=) are not currently available for [[http://mosml.org/][MosML]].
+The code is generated using =make=. The tests are run using =make test-all=. See below for an example. The signature for [[http://mlton.org/][Mlton]] is given below. A handful of functions (=rmultinom=, =lgammafn_sign=) are not currently available for [[http://mosml.org/][MosML]].
 
 Feedback is more than welcome!
 
 #+BEGIN_SRC bash :exports both :results org
 echo NOTE: tidy up
 make clean 
-echo NOTE: code generation using m4
-make
-echo NOTE: run some tests
-make test
+echo NOTE: generate code and run all of the tests
+make test-all
 #+END_SRC
 
 #+RESULTS:
@@ -25,27 +23,38 @@ NOTE: tidy up
 rm -f rmath-mlton rmath-mlton.sml
 rm -f rmath-polyml rmath-polyml.sml
 rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
-NOTE: code generation using m4
+rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
+NOTE: generate code and run all of the tests
 m4   rmath-mlton.sml.in > rmath-mlton.sml
-m4   -D LIBRMATH=/usr/lib/libRmath.so rmath-polyml.sml.in > rmath-polyml.sml
-m4   rmath-mosml.c.in > rmath-mosml.c
-m4   -D DLLNAME=librmath-mosml.so rmath-mosml.sml.in > rmath-mosml.sml
-cc -I/usr/local/include/mosml -I/usr/share/R/include -fPIC -shared -o librmath-mosml.so rmath-mosml.c -lRmath -lm
-NOTE: run some tests
 mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
 ./test-mlton
 1.95996398454
 0.665693785434
 0.474611803353
 rm test-mlton
+m4   -D LIBRMATH=/usr/lib/libRmath.so rmath-polyml.sml.in > rmath-polyml.sml
 poly --script test-polyml.sml
 1.95996398454
 0.665693785434
 0.474611803353
+m4   rmath-mosml.c.in > rmath-mosml.c
+m4   -D DLLNAME=librmath-mosml.so rmath-mosml.sml.in > rmath-mosml.sml
+cc -I/usr/local/include/mosml -I/usr/share/R/include -fPIC -shared -o librmath-mosml.so rmath-mosml.c -lRmath -lm
 mosml -quietdec test-mosml.sml
 1.95996398454
 0.665693785434
 0.474611803353
+m4   rmath-smlsharp.sml.in > rmath-smlsharp.sml
+m4   rmath-smlsharp.smi.in > rmath-smlsharp.smi
+smlsharp -c -o rmath-smlsharp.o rmath-smlsharp.sml
+smlsharp -c -o test-main.o test-main.sml
+smlsharp -c -o test-smlsharp.o test-smlsharp.sml
+smlsharp -o test-smlsharp test-smlsharp.smi -lRmath -lm
+./test-smlsharp
+1.95996398454
+0.665693785434
+0.474611803353
+rm test-smlsharp
 #+END_SRC
 
 
