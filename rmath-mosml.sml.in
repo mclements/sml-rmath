@@ -1,24 +1,5 @@
-(* Load the Dynlib and FileSys structures from the Moscow ML library: *)
-app load ["Dynlib", "FileSys"];
 divert(`-1')dnl
 define(`MosType',`ifelse($1,double,real,$1,int,int,UNKNOWN)')
-
-define(`CONSTANT',`(* $1 *)
-       val $2 : real')
-define(`FUNCTION0',`(* $1. $2() *)
-       val $2 : unit -> real')
-define(`FUNCTION1',`(* $1. $2($4) *)
-       val $2 : MosType($3) -> real')
-define(`FUNCTION2',`(* $1. $2($4,$6) *)
-       val $2 : MosType($3) * MosType($5) -> real')
-define(`FUNCTION3',`(* $1. $2($4,$6,$8) *)
-       val $2 : MosType($3) * MosType($5) * MosType($7) -> real')
-define(`FUNCTION4',`(* $1. $2($4,$6,$8,$10) *)
-       val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) -> real')
-define(`FUNCTION5',`(* $1. $2($4,$6,$8,$10,$12) *)
-       val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) -> real')
-define(`FUNCTION6',`(* $1. $2($4,$6,$8,$10,$12,$14) *)
-       val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) * MosType($13) -> real')
 
 define(`DIST1FUNCTION',`(* $1 distribution *)
 FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
@@ -38,21 +19,6 @@ FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lo
 FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
 FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
 
-divert(`1')dnl
-signature RMATH =
-sig
-datatype test_alternative = TwoSided | Less | Greater
-include(`rmath-template.m4')
-val qnorm : real * real * real * int * int -> real
-val pnorm : real * real * real * int * int -> real
-val dnorm : real * real * real * int -> real
-val get_seed : unit -> int * int
-val set_seed : int * int -> unit
-(* some additional functions *)
-val poisson_ci : real * real * test_alternative -> real * real
-val poisson_test : real * real * real * test_alternative -> real
-end;
-divert(`-1')dnl
 define(`CONSTANT',`(* $1 *)
 val $2 = $3')
 
@@ -91,6 +57,34 @@ val pnorm = pnorm5
 val dnorm = dnorm4
 val set_seed : int * int -> unit = app1 (dlsym dlh "r_set_seed")
 val get_seed : unit -> int * int = app1 (dlsym dlh "r_get_seed")
+val lgammafn_sign : real -> real * int = app1 (dlsym dlh "r_lgammafn_sign")
+fun rmultinom(n, prob) =
+    let
+	val k = Array.length prob
+	val p_tot = Array.foldr (op +) 0.0 prob
+	val rN = Array.array(k,0)
+	fun loop(i, n) =
+	    if i=k-1 orelse n=0 then
+		let
+		    val _ = Array.update(rN,k-1,n)
+		in
+		    rN
+		end
+	    else
+		if Array.sub(prob,i)>0.0 then
+		    let
+			val pp = Array.sub(prob,i)/p_tot
+			val rNi = if pp < 1.0 then Real.trunc(rbinom(Real.fromInt n, pp)) else n
+			val _ = Array.update(rN,i,rNi)
+		    in
+			loop(i+1,n-rNi)
+		    end
+		else
+		    loop(i+1,n)
+    in
+	loop(0,n)
+    end
+			   
 (* additional functions *)
 fun for f init (from, to) =
     let
