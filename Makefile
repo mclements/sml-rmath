@@ -47,7 +47,7 @@ rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.sml rmath-smlsharp.smi rmath-
 mosml: librmath-mosml.so
 
 # sub-tasks for mosml
-librmath-mosml.so: rmath-mosml.c rmath-mosml.sml
+librmath-mosml.so: rmath-mosml.c rmath-mosml-sig.sml rmath-mosml.sml
 	${CC} ${CFLAGS} -shared -o ${DLLNAME} rmath-mosml.c ${LDFLAGS}
 
 rmath-mosml.sml: rmath-template.m4 rmath-mosml.sml.in
@@ -73,7 +73,7 @@ test-smlsharp: smlsharp test-smlsharp.sml test-main.o test-smlsharp.o
 	./test-smlsharp
 	rm test-smlsharp
 
-# sub-tasks for smlsharp
+# sub-tasks for test-smlsharp
 test-main.o: test-main.sml test-main.smi
 	smlsharp -c -o $@ test-main.sml
 
