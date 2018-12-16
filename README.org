@@ -6,11 +6,13 @@ This library uses [[https://www.gnu.org/software/m4/m4.html][m4]] to generate co
 
 For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=).
 
-The code is generated using =make=. The tests are run using =make test-all=. See below for an example. The signature for [[http://mlton.org/][Mlton]] is given below. 
+The code is generated using =make=. The tests are run using =make test-all=. The signature is given below. 
 
 Feedback is more than welcome!
 
 #+BEGIN_SRC bash :exports both :results org
+echo NOTE: see main tasks using 'make'
+make
 echo NOTE: tidy up
 make clean 
 echo NOTE: show the test code
@@ -21,10 +23,12 @@ make test-all
 
 #+RESULTS:
 #+BEGIN_SRC org
+NOTE: see main tasks using make
+Available tasks include: test-all test-mlton test-polyml test-mosml test-smlsharp
 NOTE: tidy up
 rm -f rmath-mlton rmath-mlton.sml
 rm -f rmath-polyml rmath-polyml.sml
-rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
+rm -f rmath-mosml.c rmath-mosml-sig.sml rmath-mosml.sml librmath-mosml.so
 rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
 NOTE: show the test code
 fun main() =
@@ -33,10 +37,11 @@ fun main() =
 	val _ = print(Real.toString(x) ^"\n")
 	val (x,s) = Rmath.lgammafn_sign(3.0)
 	val _ = print(Real.toString(x) ^"\n")
-	val prob = Array.fromList [0.1,0.9]
+	val prob = Array.fromList [0.1,0.2,0.7]
 	val y = Rmath.rmultinom(1000,prob)
 	val _ = print(Int.toString(Array.sub(y,0)) ^"\n")
 	val _ = print(Int.toString(Array.sub(y,1)) ^"\n")
+	val _ = print(Int.toString(Array.sub(y,2)) ^"\n")
 	val x = Rmath.poisson_test(10.0,12.0,1.0, Rmath.TwoSided)
 	val _ = print(Real.toString(x) ^"\n")
 	val x = Rmath.poisson_test(10.0,8.0,1.0, Rmath.TwoSided)
@@ -51,7 +56,8 @@ mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
 1.95996398454
 0.69314718056
 89
-911
+212
+699
 0.665693785434
 0.474611803353
 rm test-mlton
@@ -60,17 +66,20 @@ poly --script test-polyml.sml
 1.95996398454
 0.69314718056
 89
-911
+212
+699
 0.665693785434
 0.474611803353
 m4   rmath-mosml.c.in > rmath-mosml.c
+m4   rmath-mosml-sig.sml.in > rmath-mosml-sig.sml
 m4   -D DLLNAME=librmath-mosml.so rmath-mosml.sml.in > rmath-mosml.sml
 cc -I/usr/local/include/mosml -I/usr/share/R/include -fPIC -shared -o librmath-mosml.so rmath-mosml.c -lRmath -lm
 mosml -quietdec test-mosml.sml
 1.95996398454
 0.69314718056
 89
-911
+212
+699
 0.665693785434
 0.474611803353
 m4   rmath-smlsharp.sml.in > rmath-smlsharp.sml
@@ -83,7 +92,8 @@ smlsharp -o test-smlsharp test-smlsharp.smi -lRmath -lm
 1.95996398454
 0.69314718056
 89
-911
+212
+699
 0.665693785434
 0.474611803353
 rm test-smlsharp
