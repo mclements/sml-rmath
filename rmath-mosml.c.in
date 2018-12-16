@@ -146,45 +146,4 @@ EXTERNML value r_lgammafn_sign(value v) {
   modify(&Field(tup, 0), MosWrite(double)(y));
   modify(&Field(tup, 1), MosWrite(int)(i));
   return tup;
-};
-
-/* value copy_int_array(mlsize_t len, int *x) */
-/* { */
-/*   mlsize_t n; */
-/*   value result; */
-/*   if (len == 0) { */
-/*     return Atom(0); */
-/*   } else { */
-/*     Push_roots(r, 1); */
-/*     r[0] = len < Max_young_wosize ? alloc(len, 0) : alloc_shr(len, 0); */
-/*     for (n=0; n<len; n++) { */
-/*       Field(r[0], n) = Val_long(x[i]); */
-/*     } */
-/*     result = r[0]; */
-/*     Pop_roots(); */
-/*     return result; */
-/*   } */
-/* } */
-
-/* // rmultinom3(n,prob,k) */
-/* EXTERNML value r_rmultinom3(value v) { */
-/*   int i; */
-/*   // read in values */
-/*   Push_roots(r, 1); */
-/*   int n = MosRead(int)(Field(v, 0)); */
-/*   r[0] = Field(v, 1); */
-/*   int k = MosRead(int)(Field(v, 2)); */
-/*   double prob[k]; */
-/*   int y[k]; */
-/*   // protect from garbage collection */
-/*   // FAILS */
-/*   // copy probabilities */
-/*   for(i=0; i<k; i++) prob[i] = MosRead(double)(Field(r[0],i)); */
-/*   // call function */
-/*   rmultinom(n, prob, k, y); */
-/*   // alloc and write */
-/*   value res = copy_int_array(k, y); */
-/*   Pop_roots(); */
-/*   return res; */
-/* } */
-
+}
