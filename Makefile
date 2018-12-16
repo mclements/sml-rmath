@@ -1,4 +1,4 @@
-.SUFFIXES: .in .c.in .c
+.SUFFIXES: .in .c.in .c .o .sml
 
 M4       = m4
 M4FLAGS  =
@@ -21,28 +21,33 @@ endif
 LIBRMATH = $(shell pkg-config --variable=libdir libRmath)/libRmath$(DLLEXT)
 DLLNAME := librmath-mosml$(DLLEXT)
 
-
 all:
 	@echo Available tasks include: test-all test-mlton test-polyml test-mosml test-smlsharp 
 
 %.c: %.c.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*.c
 
+%.sml: %.sml.in
+	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*.sml
+
 .in:
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*
+
+.sml.o:
+	smlsharp -c -o $@ $<
 
 mlton: rmath-template.m4 rmath-mlton.sml
 
 polyml: rmath-polyml.sml
 
+# sub-task for polyml
 rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D LIBRMATH=${LIBRMATH} rmath-polyml.sml.in > rmath-polyml.sml
 
 smlsharp: rmath-smlsharp.o
 
 # sub-task for smlsharp
-rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.sml rmath-smlsharp.smi rmath-smlsharp.sml
-	smlsharp -c -o $@ rmath-smlsharp.sml
+rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.sml rmath-smlsharp.smi
 
 mosml: librmath-mosml.so
 
@@ -68,20 +73,19 @@ test-polyml: polyml test-polyml.sml test-main.sml
 test-mosml: mosml test-mosml.sml test-main.sml
 	mosml -quietdec test-mosml.sml
 
-test-smlsharp: smlsharp test-smlsharp.sml test-main.o test-smlsharp.o
+test-smlsharp: smlsharp test-smlsharp.smi test-main.o test-smlsharp.o
 	smlsharp -o test-smlsharp test-smlsharp.smi ${LDFLAGS}
 	./test-smlsharp
 	rm test-smlsharp
 
 # sub-tasks for test-smlsharp
 test-main.o: test-main.sml test-main.smi
-	smlsharp -c -o $@ test-main.sml
 
 test-smlsharp.o: test-smlsharp.sml test-smlsharp.smi
-	smlsharp -c -o $@ test-smlsharp.sml
 
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
 	rm -f rmath-mosml.c rmath-mosml-sig.sml rmath-mosml.sml librmath-mosml.so
 	rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
+	rm -f a.out
