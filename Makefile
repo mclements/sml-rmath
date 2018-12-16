@@ -83,5 +83,5 @@ test-smlsharp.o: test-smlsharp.sml test-smlsharp.smi
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
-	rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
+	rm -f rmath-mosml.c rmath-mosml-sig.sml rmath-mosml.sml librmath-mosml.so
 	rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
