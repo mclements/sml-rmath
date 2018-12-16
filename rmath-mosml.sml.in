@@ -63,7 +63,7 @@ fun rmultinom(n, prob) =
 	val k = Array.length prob
 	val p_tot = Array.foldr (op +) 0.0 prob
 	val rN = Array.array(k,0)
-	fun loop(i, n) =
+	fun loop(i, p_tot, n) =
 	    if i=k-1 orelse n=0 then
 		let
 		    val _ = Array.update(rN,k-1,n)
@@ -77,12 +77,12 @@ fun rmultinom(n, prob) =
 			val rNi = if pp < 1.0 then Real.trunc(rbinom(Real.fromInt n, pp)) else n
 			val _ = Array.update(rN,i,rNi)
 		    in
-			loop(i+1,n-rNi)
+			loop(i+1, p_tot-Array.sub(prob,i), n-rNi)
 		    end
 		else
-		    loop(i+1,n)
+		    loop(i+1,p_tot,n)
     in
-	loop(0,n)
+	loop(0,p_tot,n)
     end
 			   
 (* additional functions *)
