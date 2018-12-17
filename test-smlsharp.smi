@@ -1,4 +1,4 @@
 _require "basis.smi"
-_require "rmath-sig.sml"
+_require "./rmath-smlsharp.smi"
 _require "./test-main.smi"
 

@@ -17,7 +17,7 @@ divert(`1')dnl
 structure Rmath =
 struct
 datatype test_alternative = TwoSided | Less | Greater
-include(`rmath-template.m4')
+include(`rmath-template.m4')dnl
 val imax2 = _import "imax2": (int, int) -> int;
 val imin2 = _import "imin2": (int, int) -> int;
 val set_seed = _import "set_seed": (int, int) -> ();

@@ -6,19 +6,6 @@
 
 _require "basis.smi"
 divert(`-1')
-define(`TYPE',`dnl
-ifelse($1,char,char,
-$1,unsigned char,word8,
-$1,int,int,
-$1,unsigned int,word,
-$1,unsigned short,word,
-$1,short,int,
-$1,unsigned long,word,
-$1,long,int,
-$1,double,real,
-$1,float,Real32.real,
-$1,void *,ref,
-$1)')
 define(`CONSTANT',`(* $1 *)
        val $2 : real')
 define(`FUNCTION0',`(* $1. $2() *)
@@ -40,7 +27,7 @@ divert(`1')dnl
 structure Rmath =
 struct
 datatype test_alternative = TwoSided | Less | Greater
-include(`rmath-template.m4')
+include(`rmath-template.m4')dnl
 (* imax2. imax2(a,b) *)
 val imax2 : int * int -> int
 (* imin2. imin2(a,b) *)

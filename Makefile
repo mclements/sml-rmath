@@ -49,7 +49,7 @@ rmath-polyml.sml: rmath-template.m4 rmath-sig.sml rmath-polyml.sml.in
 smlsharp: rmath-smlsharp.o
 
 # sub-task for smlsharp
-rmath-smlsharp.o: rmath-template.m4 rmath-sig.sml rmath-smlsharp.sml rmath-smlsharp.smi
+rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.smi rmath-smlsharp.sml rmath-smlsharp.smi
 
 mosml: librmath-mosml.so
 
@@ -75,7 +75,7 @@ test-polyml: polyml rmath-sig.sml rmath-polyml.sml test-main.sml test-polyml.sml
 test-mosml: mosml rmath-sig.sml rmath-mosml.sml test-main.sml test-mosml.sml
 	mosml -quietdec test-mosml.sml
 
-test-smlsharp: smlsharp rmath-sig.sml rmath-smlsharp.sml test-smlsharp.smi test-main.o test-smlsharp.o
+test-smlsharp: smlsharp rmath-smlsharp.smi rmath-smlsharp.sml test-main.o test-smlsharp.smi test-smlsharp.o
 	smlsharp -o test-smlsharp test-smlsharp.smi ${LDFLAGS}
 	./test-smlsharp
 	rm test-smlsharp
@@ -89,6 +89,6 @@ clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
 	rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
-	rm -f *.o rmath-smlsharp.sml
+	rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
 	rm -f a.out
 	rm -f rmath-sig.sml
