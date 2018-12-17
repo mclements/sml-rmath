@@ -87,7 +87,7 @@ EXTERNML value r_$2(value v) {
 }')
 
 divert(`1')dnl
-include(`rmath-template.m4')
+include(`rmath-template.m4')dnl
 
 // imax2(x,y)
 EXTERNML value r_imax2(value v) {
