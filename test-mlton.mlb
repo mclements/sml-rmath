@@ -1,5 +1,6 @@
 local
     $(SML_LIB)/basis/basis.mlb
+    rmath-sig.sml
     rmath-mlton.sml
     test-main.sml
 in

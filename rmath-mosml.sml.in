@@ -1,24 +1,4 @@
 divert(`-1')dnl
-define(`MosType',`ifelse($1,double,real,$1,int,int,UNKNOWN)')
-
-define(`DIST1FUNCTION',`(* $1 distribution *)
-FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
-FUNCTION4($1 quantile function,q$2,double,p,double,$3,int,lower,int,log)
-FUNCTION3($1 probability density function,d$2,double,p,double,$3,int,log)
-FUNCTION1($1 random numbers,r$2,double,$3)')
-
-define(`DIST2FUNCTION',`(* $1 distribution *)
-FUNCTION5($1 cumulative density function,p$2,double,q,double,$3,double,$4,int,lower,int,log)
-FUNCTION5($1 quantile function,q$2,double,p,double,$3,double,$4,int,lower,int,log)
-FUNCTION4($1 probability density function,d$2,double,p,double,$3,double,$4,int,log)
-FUNCTION2($1 random numbers,r$2,double,$3,double,$4)')
-
-define(`DIST3FUNCTION',`(* $1 distribution *)
-FUNCTION6($1 cumulative density function,p$2,double,q,double,$3,double,$4,double,$5,int,lower,int,log)
-FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lower,int,log)
-FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
-FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
-
 define(`CONSTANT',`(* $1 *)
 val $2 = $3')
 
@@ -26,22 +6,22 @@ define(`FUNCTION0',`(* $1 *)
 val $2 : unit -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION1',`(* $1 *)
-val $2 : MosType($3) -> real = app1 (dlsym dlh "r_$2")')
+val $2 : TYPE($3) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION2',`(* $1 *)
-val $2 : MosType($3) * MosType($5) -> real = app1 (dlsym dlh "r_$2")')
+val $2 : TYPE($3) * TYPE($5) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION3',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) -> real = app1 (dlsym dlh "r_$2")')
+val $2 : TYPE($3) * TYPE($5) * TYPE($7) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION4',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) -> real = app1 (dlsym dlh "r_$2")')
+val $2 : TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION5',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) -> real = app1 (dlsym dlh "r_$2")')
+val $2 : TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) -> real = app1 (dlsym dlh "r_$2")')
 
 define(`FUNCTION6',`(* $1 *)
-val $2 : MosType($3) * MosType($5) * MosType($7) * MosType($9) * MosType($11) * MosType($13) -> real = app1 (dlsym dlh "r_$2")')
+val $2 : TYPE($3) * TYPE($5) * TYPE($7) * TYPE($9) * TYPE($11) * TYPE($13) -> real = app1 (dlsym dlh "r_$2")')
 divert(`1')dnl
 structure Rmath :> RMATH =
 struct
@@ -51,10 +31,9 @@ open Dynlib;
 val dlh = dlopen { lib = Path.concat(FileSys.getDir (), "DLLNAME"),
 		 flag = RTLD_LAZY, 
 		 global = false }
-include(`rmath-template.m4')
-val qnorm = qnorm5
-val pnorm = pnorm5
-val dnorm = dnorm4
+include(`rmath-template.m4')dnl
+val imin2 : int * int -> int = app1 (dlsym dlh "r_imin2")
+val imax2 : int * int -> int = app1 (dlsym dlh "r_imax2")
 val set_seed : int * int -> unit = app1 (dlsym dlh "r_set_seed")
 val get_seed : unit -> int * int = app1 (dlsym dlh "r_get_seed")
 val lgammafn_sign : real -> real * int = app1 (dlsym dlh "r_lgammafn_sign")
@@ -84,59 +63,4 @@ fun rmultinom(n, prob) =
     in
 	loop(0,p_tot,n)
     end
-			   
-(* additional functions *)
-fun for f init (from, to) =
-    let
-	fun loop(i,y) = if i>to then y else loop(i+1,f(i,y))
-    in
-	loop(from,init)
-    end
-fun sum f = for (fn (i, y) => Real.+(f(real(i)),y)) 0.0
-fun sum f = for (fn (i, y) => f(i)+y) 0
-fun count predicate = for (fn (i, y) => if predicate(i) then y+1 else y) 0
-fun poisson_ci(x, conflevel, alternative) =
-    let
-	val alpha = (1.0-conflevel)/2.0
-	fun pL(x,alpha) = if Real.==(x,0.0) then 0.0 else qgamma(alpha,x, 1.0, 1, 0)
-	fun pU(x,alpha) = qgamma(1.0-alpha, x+1.0, 1.0, 1, 0)
-    in
-	case alternative of
-	    Less => (0.0, pU(x, 1.0-conflevel))
-	  | Greater => (pL(x, 1.0-conflevel), 1.0E200)
-	  | TwoSided => (pL(x,alpha), pU(x,alpha))
-    end
-fun poisson_test(x, t, r, alternative) =
-    let
-	val m = r*t
-    in
-	case alternative of
-	    Less => ppois(x,m,1,0)
-	  | Greater => ppois(x-1.0,m,0,0)
-	  | TwoSided =>
-	    if Real.==(m,0.0) then (if Real.==(x,0.0) then 1.0 else 0.0)
-	    else
-		let
-		    val relErr = 1.0 + 1.0e~7
-		    val d = dpois(x,m,0)
-		    val dstar = d * relErr
-		    fun pred i = dpois(real(i),m,0)<=dstar
-		in
-		    if Real.==(x,m) then 1.0
-		    else if x<m then
-			let
-			    fun loop n = if dpois(real(n),m,0)>d then loop(n*2) else n
-			    val n = loop(Real.ceil(2.0*m-x))
-			    val y = count pred (Real.ceil(m), n)
-			in
-			    ppois(x,m,1,0) + ppois(real(n-y),m,0,0)
-			end
-		    else (* x>m *)
-			let
-			    val y = count pred (0,Real.floor(m))
-			in
-			    ppois(real(y-1),m,1,0) + ppois(x-1.0, m,0,0)
-			end
-		end
-    end
-end;
+EXTRAFUNS(8.98846567431157903968e307)

@@ -36,44 +36,46 @@ all:
 .sml.o:
 	smlsharp -c -o $@ $<
 
-mlton: rmath-template.m4 rmath-mlton.sml
+rmath-sig.sml: rmath-sig.sml.in
 
-polyml: rmath-polyml.sml
+mlton: rmath-template.m4 rmath-sig.sml rmath-mlton.sml
+
+polyml: rmath-sig.sml rmath-polyml.sml
 
 # sub-task for polyml
-rmath-polyml.sml: rmath-template.m4 rmath-polyml.sml.in
+rmath-polyml.sml: rmath-template.m4 rmath-sig.sml rmath-polyml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D LIBRMATH=${LIBRMATH} rmath-polyml.sml.in > rmath-polyml.sml
 
 smlsharp: rmath-smlsharp.o
 
 # sub-task for smlsharp
-rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.sml rmath-smlsharp.smi
+rmath-smlsharp.o: rmath-template.m4 rmath-sig.sml rmath-smlsharp.sml rmath-smlsharp.smi
 
 mosml: librmath-mosml.so
 
 # sub-tasks for mosml
-librmath-mosml.so: rmath-mosml.c rmath-mosml-sig.sml rmath-mosml.sml
+librmath-mosml.so: rmath-mosml.c rmath-sig.sml rmath-mosml.sml
 	${CC} ${CFLAGS} -shared -o ${DLLNAME} rmath-mosml.c ${LDFLAGS}
 
-rmath-mosml.sml: rmath-template.m4 rmath-mosml.sml.in
+rmath-mosml.sml: rmath-template.m4 rmath-sig.sml rmath-mosml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D DLLNAME=${DLLNAME} rmath-mosml.sml.in > rmath-mosml.sml
 
 # testing
 
 test-all: test-mlton test-polyml test-mosml test-smlsharp
 
-test-mlton: mlton test-main.sml test-call-main.sml test-mlton.mlb
+test-mlton: mlton rmath-sig.sml rmath-mlton.sml test-main.sml test-call-main.sml test-mlton.mlb
 	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
 	./test-mlton
 	rm test-mlton
 
-test-polyml: polyml test-polyml.sml test-main.sml
+test-polyml: polyml rmath-sig.sml rmath-polyml.sml test-main.sml test-polyml.sml
 	poly --script test-polyml.sml
 
-test-mosml: mosml test-mosml.sml test-main.sml
+test-mosml: mosml rmath-sig.sml rmath-mosml.sml test-main.sml test-mosml.sml
 	mosml -quietdec test-mosml.sml
 
-test-smlsharp: smlsharp test-smlsharp.smi test-main.o test-smlsharp.o
+test-smlsharp: smlsharp rmath-sig.sml rmath-smlsharp.sml test-smlsharp.smi test-main.o test-smlsharp.o
 	smlsharp -o test-smlsharp test-smlsharp.smi ${LDFLAGS}
 	./test-smlsharp
 	rm test-smlsharp
@@ -86,6 +88,7 @@ test-smlsharp.o: test-smlsharp.sml test-smlsharp.smi
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
-	rm -f rmath-mosml.c rmath-mosml-sig.sml rmath-mosml.sml librmath-mosml.so
-	rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
+	rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
+	rm -f *.o rmath-smlsharp.sml
 	rm -f a.out
+	rm -f rmath-sig.sml

@@ -1,3 +1,126 @@
+divert(`-1')
+define(`TYPE',`dnl
+ifelse($1,int,int,
+$1,double,real,
+$1)')
+define(`MLTONTYPE',`dnl
+ifelse($1,unsigned int,int,
+$1,int,int,
+$1,unsigned short,int,
+$1,short,int,
+$1,unsigned long,int,
+$1,long,int,
+$1,double,real,
+$1,float,real,
+$1,void *,ref,
+$1)')
+define(`POLYMLTYPE',`dnl
+ifelse($1,unsigned int,int,
+$1,int,int,
+$1,unsigned short,int,
+$1,short,int,
+$1,unsigned long,int,
+$1,long,int,
+$1,double,real,
+$1,float,real,
+$1,void *,ref,
+$1)')
+define(`SMLSHARPTYPE',`dnl
+ifelse($1,char,char,
+$1,unsigned char,word8,
+$1,int,int,
+$1,unsigned int,word,
+$1,unsigned short,word,
+$1,short,int,
+$1,unsigned long,word,
+$1,long,int,
+$1,double,real,
+$1,float,Real32.real,
+$1,void *,ref,
+$1)')
+define(`DIST1FUNCTION',`FUNCTION4($1 cumulative density function,p$2,double,q,double,$3,int,lower,int,log)
+FUNCTION4($1 quantile function,q$2,double,p,double,$3,int,lower,int,log)
+FUNCTION3($1 probability density function,d$2,double,p,double,$3,int,log)
+FUNCTION1($1 random numbers,r$2,double,$3)')
+define(`DIST2FUNCTION',`FUNCTION5($1 cumulative density function,p$2,double,q,double,$3,double,$4,int,lower,int,log)
+FUNCTION5($1 quantile function,q$2,double,p,double,$3,double,$4,int,lower,int,log)
+FUNCTION4($1 probability density function,d$2,double,p,double,$3,double,$4,int,log)
+FUNCTION2($1 random numbers,r$2,double,$3,double,$4)')
+define(`DIST3FUNCTION',`FUNCTION6($1 cumulative density function,p$2,double,q,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION6($1 quantile function,q$2,double,p,double,$3,double,$4,double,$5,int,lower,int,log)
+FUNCTION5($1 probability density function,d$2,double,p,double,$3,double,$4,double,$5,int,log)
+FUNCTION3($1 random numbers,r$2,double,$3,double,$4,double,$5)')
+define(`EXTRAFUNS',`val log1pexp = Rf_log1pexp
+val qnorm = qnorm5
+val pnorm = pnorm5
+val dnorm = dnorm4
+(* additional functions *)
+fun poisson_ci(x, conflevel, alternative) =
+    let
+	val alpha = (1.0-conflevel)/2.0
+	fun pL(x,alpha) = if Real.==(x,0.0) then 0.0 else qgamma(alpha,x, 1.0, 1, 0)
+	fun pU(x,alpha) = qgamma(1.0-alpha, x+1.0, 1.0, 1, 0)
+    in
+	case alternative of
+	    Less => (0.0, pU(x, 1.0-conflevel))
+	  | Greater => (pL(x, 1.0-conflevel), $1)
+	  | TwoSided => (pL(x,alpha), pU(x,alpha))
+    end
+fun id x = x
+(* operations on ranges from..to *)
+fun seq_list(from,to) =
+    let
+	fun loop(i,y) = if i>to then y else loop(i+1,i :: y)
+    in
+	List.rev(loop(from,[]))
+    end
+(* infix -- *)
+(* fun a -- b = seq_list(a,b) *)
+fun tabulate f (from,to) = List.tabulate(to-from+1,fn i => f(i+from))
+fun for f init (from, to) =
+    let
+	fun loop(i,y) = if i>to then y else loop(i+1,f(i,y))
+    in
+	loop(from,init)
+    end
+fun sum f = for (fn (i, y) => Real.+(f(real(i)),y)) 0.0
+fun sum f = for (fn (i, y) => f(i)+y) 0
+fun count predicate = for (fn (i, y) => if predicate(i) then y+1 else y) 0
+fun poisson_test(x, t, r, alternative) =
+    let
+	val m = r*t
+    in
+	case alternative of
+	    Less => ppois(x,m,1,0)
+	  | Greater => ppois(x-1.0,m,0,0)
+	  | TwoSided =>
+	    if Real.==(m,0.0) then (if Real.==(x,0.0) then 1.0 else 0.0)
+	    else
+		let
+		    val relErr = 1.0 + 1.0e~7
+		    val d = dpois(x,m,0)
+		    val dstar = d * relErr
+		    fun pred i = dpois(real(i),m,0)<=dstar
+		in
+		    if Real.==(x,m) then 1.0
+		    else if x<m then
+			let
+			    fun loop n = if dpois(real(n),m,0)>d then loop(n*2) else n
+			    val n = loop(Real.ceil(2.0*m-x))
+			    val y = count pred (Real.ceil(m), n)
+			in
+			    ppois(x,m,1,0) + ppois(real(n-y),m,0,0)
+			end
+		    else (* x>m *)
+			let
+			    val y = count pred (0,Real.floor(m))
+			in
+			    ppois(real(y-1),m,1,0) + ppois(x-1.0, m,0,0)
+			end
+		end
+    end
+end')
+divert(`1')dnl
 CONSTANT(e,M_E,2.718281828459045235360287471353)
 CONSTANT(log2(e),M_LOG2E,1.442695040888963407359924681002)
 CONSTANT(log10(e),M_LOG10E,0.434294481903251827651128918917)
