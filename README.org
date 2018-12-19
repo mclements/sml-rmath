@@ -8,6 +8,8 @@ For installation in [[http://mosml.org/][MosML]], the user may need to change th
 
 The code is generated using =make=. The tests for the four SML implementations and Manticore are run using =make test-all=. The SML signature is given below. Manticore does not implement some of the functions (e.g. =set_seed= and =get_seed=),
 
+I have not yet implemented the library in [[https://www.smlnj.org/][SML/NJ]] or [[https://www.ps.uni-saarland.de/alice/][Alice]] as my development platform is 64-bit.
+
 Feedback is more than welcome!
 
 #+BEGIN_SRC bash :exports both :results org
