@@ -1,0 +1,240 @@
+(* double.pml
+ *
+ * COPYRIGHT (c) 2008 The Manticore Project (http://manticore.cs.uchicago.edu)
+ * All rights reserved.
+ *
+ * Double-precision floating-point math functions
+ *)
+
+divert(`-1')
+define(`ATTRIBUTE',`ifelse($1,runif,,
+$1,rgamma,,
+$1,rnorm,,
+$1,rbeta,,
+$1,rlnorm,,
+$1,rchisq,,
+$1,rnchisq,,
+$1,rf,,
+$1,rt,,
+$1,rbinom,,
+$1,rcauchy,,
+$1,rexp,,
+$1,rgeom,,
+$1,rnbinom,,
+$1,rhyper,,
+$1,rpois,,
+$1,rweibull,,
+$1,rlogis,,
+$1,rwilcox,,
+$1,rsignrank,,
+__attribute__((pure)))')
+define(`CONSTANT',`val $2 = $3')
+define(`FUNCTION0',`_primcode(
+	extern double $2 () ATTRIBUTE($2);
+	define inline @r-$2 (_ : unit / exh : exh) : ml_double =
+	let res : double = ccall $2 ()
+	    return (alloc(res));
+    )
+    val $2 : unit -> double = _prim (@r-$2)
+')
+define(`FUNCTION1',` _primcode(
+	extern double $2 ($3) ATTRIBUTE($2);
+	define inline @r-$2 (arg : ml_$3 / exh : exh) : ml_double =
+	let res : double = ccall $2 (#0(arg))
+	    return (alloc(res));
+    )
+    val $2 : $3 -> double = _prim (@r-$2)
+')
+define(`FUNCTION2',` _primcode(
+	extern double $2 ($3,$5) ATTRIBUTE($2);
+	define inline @r-$2 (arg : [ml_$3, ml_$5] / exh : exh) : ml_double =
+	let res : double = ccall $2 (#0(#0(arg)),#0(#1(arg)))
+	    return (alloc(res));
+    )
+    val $2 : $3 * $5 -> double = _prim (@r-$2)
+')
+define(`FUNCTION3',` _primcode(
+	extern double $2 ($3,$5,$7) ATTRIBUTE($2);
+	define inline @r-$2 (arg : [ml_$3, ml_$5, ml_$7] / exh : exh) : ml_double =
+	let res : double = ccall $2 (#0(#0(arg)),#0(#1(arg)),#0(#2(arg)))
+	    return (alloc(res));
+    )
+    val $2 : $3 * $5 * $7 -> double = _prim (@r-$2)
+')
+define(`FUNCTION4',` _primcode(
+	extern double $2 ($3,$5,$7,$9) ATTRIBUTE($2);
+	define inline @r-$2 (arg : [ml_$3, ml_$5, ml_$7, ml_$9] / exh : exh) : ml_double =
+	let res : double = ccall $2 (#0(#0(arg)),#0(#1(arg)),#0(#2(arg)),#0(#3(arg)))
+	    return (alloc(res));
+    )
+    val $2 : $3 * $5 * $7 * $9 -> double = _prim (@r-$2)
+')
+define(`FUNCTION5',` _primcode(
+	extern double $2 ($3,$5,$7,$9,$11) ATTRIBUTE($2);
+	define inline @r-$2 (arg : [ml_$3, ml_$5, ml_$7, ml_$9, ml_$11] / exh : exh) : ml_double =
+	let res : double = ccall $2 (#0(#0(arg)),#0(#1(arg)),#0(#2(arg)),#0(#3(arg)),#0(#4(arg)))
+	    return (alloc(res));
+    )
+    val $2 : $3 * $5 * $7 * $9 * $11 -> double = _prim (@r-$2)
+')
+define(`FUNCTION6',` _primcode(
+	extern double $2 ($3,$5,$7,$9,$11,$13) ATTRIBUTE($2);
+	define inline @r-$2 (arg : [ml_$3, ml_$5, ml_$7, ml_$9, ml_$11, ml_$13] / exh : exh) : ml_double =
+	let res : double = ccall $2 (#0(#0(arg)),#0(#1(arg)),#0(#2(arg)),#0(#3(arg)),#0(#4(arg)),#0(#5(arg)))
+	    return (alloc(res));
+    )
+    val $2 : $3 * $5 * $7 * $9 * $11 * $13 -> double = _prim (@r-$2)
+')
+divert(`1')dnl
+
+structure Rmath =
+  struct
+
+    structure PT = PrimTypes
+    type double = double
+    type long = long
+    datatype test_alternative = TwoSided | Less | Greater
+    include(`rmath-template.m4')dnl
+ _primcode(
+    extern double imax2 (int,int) __attribute__((pure));
+    extern double imin2 (int,int) __attribute__((pure));
+    (* extern void set_seed (int,int); *)
+    define inline @r-imax2 (arg : [ml_int, ml_int] / exh : exh) : ml_int =
+	let res : int = ccall imax2 (#0(#0(arg)),#0(#1(arg)))
+	    return (alloc(res));
+    define inline @r-imin2 (arg : [ml_int, ml_int] / exh : exh) : ml_int =
+	let res : int = ccall imin2 (#0(#0(arg)),#0(#1(arg)))
+	    return (alloc(res));
+    (* define inline @r-set_seed (arg : [ml_int, ml_int] / exh : exh) : unit = *)
+    (* 	let _ = ccall set_seed (#0(#0(arg)),#0(#1(arg))) *)
+    (* 			      return (); *)
+    )
+    val imax2 : int * int -> int = _prim (@r-imax2)
+    val imin2 : int * int -> int = _prim (@r-imin2)
+    (* val set_seed : int * int -> unit = _prim (@r-set_seed) *)
+    fun set_seed(a,b) = (Print.printLn("Error: set_seed(a,b) not implemented"); raise Fail "Not implemented")
+    fun get_seed() = (Print.printLn("Error: get_seed() not implemented"); raise Fail "Not implemented")
+    fun lgammafn_sign x = (lgammafn x, 1)
+fun rmultinom(n, prob) =
+    let
+	val k = Array.length prob
+	val p_tot = Array.foldl (fn (a,b) => a+b) 0.0 prob
+	val rN = Array.array(k,0)
+	fun loop(i, p_tot, n) =
+	    if i=k-1 orelse n=0 then
+		let
+		    val _ = Array.update(rN,k-1,n)
+		in
+		    rN
+		end
+	    else
+		if Array.sub(prob,i)>0.0 then
+		    let
+			val pp = Array.sub(prob,i)/p_tot
+			val rNi = if pp < 1.0 then Long.toInt(Double.round(rbinom(Double.fromInt n, pp))) else n
+			val _ = Array.update(rN,i,rNi)
+		    in
+			loop(i+1, p_tot-Array.sub(prob,i), n-rNi)
+		    end
+		else
+		    loop(i+1,p_tot,n)
+    in
+	loop(0,p_tot,n)
+    end
+val log1pexp = Rf_log1pexp
+val qnorm = qnorm5
+val pnorm = pnorm5
+val dnorm = dnorm4
+(* additional functions *)
+fun poisson_ci(x, conflevel, alternative) =
+    let
+	val alpha = (1.0-conflevel)/2.0
+	fun pL(x,alpha) = if x=0.0 then 0.0 else qgamma(alpha,x, 1.0, 1, 0)
+	fun pU(x,alpha) = qgamma(1.0-alpha, x+1.0, 1.0, 1, 0)
+    in
+	case alternative of
+	    Less => (0.0, pU(x, 1.0-conflevel))
+	  | Greater => (pL(x, 1.0-conflevel), 8.98846567431157903968e307)
+	  | TwoSided => (pL(x,alpha), pU(x,alpha))
+    end
+fun id x = x
+(* operations on ranges from..to *)
+fun seq_list(from,upto) =
+    let
+	fun loop(i,y) = if i>upto then y else loop(i+1,i :: y)
+    in
+	List.rev(loop(from,[]))
+    end
+(* infix -- *)
+(* fun a -- b = seq_list(a,b) *)
+fun tabulate f (from,upto) = List.tabulate(upto-from+1,fn i => f(i+from))
+fun for f init (from, upto) =
+    let
+	fun loop(i,y) = if i>upto then y else loop(i+1,f(i,y))
+    in
+	loop(from,init)
+    end
+fun sum f = for (fn (i, y) => f(Double.fromInt(i))+y) 0.0
+fun sum f = for (fn (i, y) => f(i)+y) 0
+fun count predicate = for (fn (i, y) => if predicate(i) then y+1 else y) 0
+fun ceil x =
+    let
+	val rx = Long.toInt(Double.round x)
+    in
+	if Double.fromInt(rx)>x then rx else rx+1
+    end
+fun floor x =
+    let
+	val rx = Long.toInt(Double.round x)
+    in
+	if Double.fromInt(rx)>x then rx-1 else rx
+    end
+fun poisson_test(x, t, r, alternative) =
+    let
+	val m = r*t
+    in
+	case alternative of
+	    Less => ppois(x,m,1,0)
+	  | Greater => ppois(x-1.0,m,0,0)
+	  | TwoSided =>
+	    if m=0.0 then (if x=0.0 then 1.0 else 0.0)
+	    else
+		let
+		    val relErr = 1.0 + 1.0e~7
+		    val d = dpois(x,m,0)
+		    val dstar = d * relErr
+		    fun pred i = dpois(Double.fromInt(i),m,0)<=dstar
+		in
+		    if x=m then 1.0
+		    else if x<m then
+			let
+			    fun loop n = if dpois(Double.fromInt(n),m,0)>d then loop(n*2) else n
+			    val n = loop(ceil(2.0*m-x))
+			    val y = count pred (ceil(m), n)
+			in
+			    ppois(x,m,1,0) + ppois(Double.fromInt(n-y),m,0,0)
+			end
+		    else (* x>m *)
+			let
+			    val y = count pred (0,floor(m))
+			in
+			    ppois(Double.fromInt(y-1),m,1,0) + ppois(x-1.0, m,0,0)
+			end
+		end
+    end
+  end
+
+
+val x = Rmath.qnorm(0.975,0.0,1.0,1,0);
+val _ = Print.printLn(Double.toString(x))
+val (x,s) = Rmath.lgammafn_sign(3.0)
+val _ = Print.printLn(Double.toString(x))
+val prob = Array.fromList [0.1,0.2,0.7]
+val y = Rmath.rmultinom(1000,prob)
+val _ = Print.printLn(Int.toString(Array.sub(y,0)))
+val _ = Print.printLn(Int.toString(Array.sub(y,1)))
+val _ = Print.printLn(Int.toString(Array.sub(y,2)))
+val x = Rmath.poisson_test(10.0,12.0,1.0, Rmath.TwoSided)
+val _ = Print.printLn(Double.toString(x))
+val x = Rmath.poisson_test(10.0,8.0,1.0, Rmath.TwoSided)
+val _ = Print.printLn(Double.toString(x))

@@ -17,3 +17,5 @@ scratch.sml
 a.out
 rmath-mosml-sig.sml
 rmath-sig.sml
+rmath-manticore.pml
+rmath-manticore.s

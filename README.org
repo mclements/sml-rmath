@@ -1,12 +1,12 @@
-#+title: sml-rmath: SML library for the Rmath library with implementations in mlton, polyml, mosml and sml#
+#+title: sml-rmath: SML library for the Rmath library with implementations in MLton, Poly/ML, Moscow ML (MosML), SML# and Manticore
 
 #+OPTIONS: H:3 toc:nil num:nil
 
 This library uses [[https://www.gnu.org/software/m4/m4.html][m4]] to generate code to interface with the [[https://packages.debian.org/sid/r-mathlib][libRmath]] library.
 
-For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=).
+For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=). For installation in [[http://manticore.cs.uchicago.edu/][Manticore]], the initial configure command will need to be pass the =LIBS= variable as =-lRmath= (e.g. LIBS=-lRmath ./configure)
 
-The code is generated using =make=. The tests for all four SML implementations are run using =make test-all=. The signature is given below. 
+The code is generated using =make=. The tests for the four SML implementations and Manticore are run using =make test-all=. The SML signature is given below. Manticore does not implement some of the functions (e.g. =set_seed= and =get_seed=),
 
 Feedback is more than welcome!
 
@@ -32,6 +32,7 @@ rm -f rmath-mosml.c rmath-mosml.sml librmath-mosml.so
 rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
 rm -f a.out
 rm -f rmath-sig.sml
+rm -f rmath-manticore.pml rmath-manticore.s
 NOTE: show the test code
 fun main() =
     let
@@ -99,6 +100,17 @@ smlsharp -o test-smlsharp test-smlsharp.smi -lRmath -lm
 0.665693785434
 0.474611803353
 rm test-smlsharp
+m4   rmath-manticore.pml.in > rmath-manticore.pml
+pmlc rmath-manticore.pml
+./a.out
+1.9599639845
+0.6931471806
+89
+212
+699
+0.6656937854
+0.4746118034
+rm a.out
 #+END_SRC
 
 

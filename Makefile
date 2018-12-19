@@ -36,7 +36,7 @@ all:
 .sml.o:
 	smlsharp -c -o $@ $<
 
-rmath-sig.sml: rmath-sig.sml.in
+rmath-sig.sml: rmath-template.m4 rmath-sig.sml.in
 
 mlton: rmath-template.m4 rmath-sig.sml rmath-mlton.sml
 
@@ -53,6 +53,8 @@ rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.smi rmath-smlsharp.sml rmath-
 
 mosml: librmath-mosml.so
 
+manticore: rmath-template.m4 rmath-manticore.pml
+
 # sub-tasks for mosml
 librmath-mosml.so: rmath-mosml.c rmath-sig.sml rmath-mosml.sml
 	${CC} ${CFLAGS} -shared -o ${DLLNAME} rmath-mosml.c ${LDFLAGS}
@@ -62,7 +64,7 @@ rmath-mosml.sml: rmath-template.m4 rmath-sig.sml rmath-mosml.sml.in
 
 # testing
 
-test-all: test-mlton test-polyml test-mosml test-smlsharp
+test-all: test-mlton test-polyml test-mosml test-smlsharp test-manticore
 
 test-mlton: mlton rmath-sig.sml rmath-mlton.sml test-main.sml test-call-main.sml test-mlton.mlb
 	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
@@ -85,6 +87,11 @@ test-main.o: test-main.sml test-main.smi
 
 test-smlsharp.o: test-smlsharp.sml test-smlsharp.smi
 
+test-manticore: manticore
+	pmlc rmath-manticore.pml
+	./a.out
+	rm a.out
+
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
@@ -92,3 +99,4 @@ clean:
 	rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
 	rm -f a.out
 	rm -f rmath-sig.sml
+	rm -f rmath-manticore.pml rmath-manticore.s
