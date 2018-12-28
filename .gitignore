@@ -23,3 +23,7 @@ rmath-manticore.pml
 rmath-manticore.s
 rmath-mlkit.sml
 rmath-mlkit.c
+.cm/
+MLB/
+NLFFI-Generated/
+smlnj/
