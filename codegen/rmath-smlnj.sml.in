@@ -1,0 +1,49 @@
+(* NOTE: this file will NOT compile due to an issue with log1pexp 
+   See rmath-smlnj.sml *)
+divert(`-1')dnl
+define(`CONSTANT',`val $2 = $3')
+define(`FUNCTION0',`val $2 = F_$2.f')
+define(`FUNCTION1',`val $2 = F_$2.f')
+define(`FUNCTION2',`val $2 = F_$2.f')
+define(`FUNCTION3',`val $2 = F_$2.f')
+define(`FUNCTION4',`val $2 = F_$2.f')
+define(`FUNCTION5',`val $2 = F_$2.f')
+define(`FUNCTION6',`val $2 = F_$2.f')
+divert(`1')dnl
+structure Rmath = struct
+datatype test_alternative = TwoSided | Less | Greater
+include(`rmath-template.m4')dnl
+val imax2 = F_imax2.f
+val imin2 = F_imin2.f
+fun for_below f below =
+    let
+	fun loop i = if i=below then () else (f(i); loop(i+1))
+    in
+	loop 0
+    end
+fun rmultinom(n : int, prob : real Array.array) =
+    let
+	val k = Array.length prob
+	val probptr = C.alloc C.T.double (Word.fromInt k)
+	val _ = for_below (fn i => C.Set.double(C.Ptr.sub(probptr,i), Array.sub(prob,i))) k
+	val outptr = C.alloc C.T.sint (Word.fromInt k)
+	val _ = F_rmultinom.f(Int32.fromInt n, probptr, Int32.fromInt k, outptr)
+	val out = Array.array(k,0)
+	val _ = for_below (fn i => Array.update(out,i,C.Get.sint(C.Ptr.sub(outptr,i)))) k
+	val _ = C.free outptr
+	val _ = C.free probptr
+    in
+	out
+    end
+fun lgammafn_sign x =
+    let
+	val ptr : C.rw C.sint_obj C.ptr = C.alloc C.T.sint (Word.fromInt 1)
+	val y = F_lgammafn_sign.f(x,ptr)
+	val sign = C.Ptr.|*| ptr
+	val _ = C.free ptr
+    in
+	(y,sign)
+    end
+fun printLn x = print(x ^ "\n")
+fun stop _ = OS.Process.exit(OS.Process.success)
+EXTRAFUNS(Real.posInf)
