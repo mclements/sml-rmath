@@ -53,6 +53,11 @@ rmath-smlsharp.o: rmath-template.m4 rmath-smlsharp.smi rmath-smlsharp.sml rmath-
 
 mosml: librmath-mosml.so
 
+smlnj: rmath-smlnj.sml nlffi
+
+nlffi: f-Rf_log1pexp.sml
+	ml-nlffigen -d smlnj -add ../smlnj-libh.sml -DMATHLIB_STANDALONE Rmath-nlffigen.h
+
 manticore: rmath-template.m4 rmath-manticore.pml
 
 # sub-tasks for mosml
@@ -103,6 +108,10 @@ test-mlkit: mlkit test-mlkit.mlb
 
 test-mlkit.mlb: rmath-mlkit.sml test-main.sml test-call-main.sml rmath-sig.sml
 
+test-smlnj: smlnj test-smlnj.cm rmath-smlnj.sml rmath-sig.sml
+	sml @SMLquiet -m test-smlnj.cm
+
+
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml
@@ -112,3 +121,4 @@ clean:
 	rm -f rmath-sig.sml
 	rm -f rmath-manticore.pml rmath-manticore.s
 	rm -f rmath-mlkit.c rmath-mlkit.sml
+	rm -rf smlnj

@@ -1,0 +1,9 @@
+library
+    structure Test
+is
+    $/basis.cm
+    $c/internals/c-int.cm
+    ./smlnj/nlffi-generated.cm
+    ./rmath-sig.sml
+    ./rmath-smlnj.sml
+    ./test-smlnj.sml
