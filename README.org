@@ -1,16 +1,44 @@
-#+title: sml-rmath: SML library for the Rmath library with implementations in MLton, Poly/ML, Moscow ML (MosML), SML# and Manticore
+#+title: sml-rmath: SML foreign function interface library for the Rmath library with implementations in MLton, Poly/ML, Moscow ML (MosML), MLkit, SML/NJ, SML# and Manticore
+#+author: Mark Clements
 
 #+OPTIONS: H:3 toc:nil num:nil
 
-This library uses [[https://www.gnu.org/software/m4/m4.html][m4]] to generate code to interface with the [[https://packages.debian.org/sid/r-mathlib][libRmath]] library.
+* Summary
 
-For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=). For installation in [[http://manticore.cs.uchicago.edu/][Manticore]], the initial configure command will need to be pass the =LIBS= variable as =-lRmath= (e.g. LIBS=-lRmath ./configure)
+This library provides an interface to the [[https://packages.debian.org/sid/r-mathlib][Rmath]] library for a number of SML implementations/dialects, including MLton, Poly/ML, Moscow ML, MLkit, SML/NJ, SML# and Manticore.
 
-The code is generated using =make=. The tests for the four SML implementations and Manticore are run using =make test-all=. The SML signature is given below. Manticore does not implement some of the functions (e.g. =set_seed= and =get_seed=),
-
-I have not yet implemented the library in [[https://www.smlnj.org/][SML/NJ]] or [[https://www.ps.uni-saarland.de/alice/][Alice]] as my development platform is 64-bit.
+The SML signature is given below. 
 
 Feedback is more than welcome!
+
+* Installation
+
+Aside from the SML implementations, this library also requires the [[https://packages.debian.org/sid/r-mathlib][Rmath]] library and [[https://www.gnu.org/software/m4/m4.html][m4]], which is used to generate code. The package was developed on Ubuntu 16.04 (64 bit) and Ubuntu 18.04 (32 bit): to install the [[https://packages.debian.org/sid/r-mathlib][Rmath]] library on Ubuntu, use =apt install r-mathlib=. The default =make= task describes some of the other tasks. Test tasks include:
+  - =test-mlton= :: MLton compiler (32 bit, 64 bit)
+  - =test-polyml= :: PolyML (32 bit, 64 bit)
+  - =test-mosml= :: MosML compiler (32 bit, 64 bit)
+  - =test-mlkit= :: MLKit compiler (32 bit)
+  - =test-smlnj= :: SML/NJ (32 bit --- pending the 64 bit release)
+  - =test-smlsharp= :: SML# (32 bit (untested), 64 bit)
+  - =test-manticore= :: Manticore compiler (64 bit)
+  - =test-all-32= :: All 32 bit implementations
+  - =test-all-64= :: All 64 bit implementations
+
+For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=). 
+
+For installation in [[http://manticore.cs.uchicago.edu/][Manticore]], the initial configure command will need to be pass the =LIBS= variable as =-lRmath= (e.g. =LIBS = -lRmath ./configure=)
+
+
+* Limitations and extensions
+
+Manticore does not implement some of the functions (e.g. =set_seed= and =get_seed=).
+
+The 32 bit implementation for SML# is untested, as I was unable to compile SML# on Ubuntu 18.04 due to the requirement for llvm-3.7.
+
+It may be interesting from a historical perspective to extend this library to AliceML and Moby.
+
+
+* Test output
 
 #+BEGIN_SRC bash :exports both :results org
 echo NOTE: see main tasks using 'make'
@@ -115,6 +143,8 @@ pmlc rmath-manticore.pml
 rm a.out
 #+END_SRC
 
+
+* SML signature
 
 #+BEGIN_SRC sml :exports code
 signature RMATH =

@@ -22,7 +22,9 @@ LIBRMATH = $(shell pkg-config --variable=libdir libRmath)/libRmath$(DLLEXT)
 DLLNAME := librmath-mosml$(DLLEXT)
 
 all:
-	@echo Available tasks include: test-all-32 test-all-64 test-mlton test-polyml test-mosml test-smlsharp 
+	@echo Available tasks include: test-all-32 test-all-64 test-mlton test-polyml test-mosml test-smlsharp, test-manticore test-mlkit
+	@echo 32-bit tasks: test-mlton test-polyml test-mosml test-smlsharp test-mlkit test-smlnj (incomplete)
+	@echo 64-bit tasks: test-mlton test-polyml test-mosml test-smlsharp test-manticore
 
 %.c: %.c.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*.c
