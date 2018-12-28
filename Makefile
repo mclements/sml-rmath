@@ -110,3 +110,4 @@ clean:
 	rm -f a.out
 	rm -f rmath-sig.sml
 	rm -f rmath-manticore.pml rmath-manticore.s
+	rm -f rmath-mlkit.c rmath-mlkit.sml
