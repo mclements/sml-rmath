@@ -23,7 +23,7 @@ DLLNAME := librmath-mosml$(DLLEXT)
 
 all:
 	@echo Available tasks include: test-all-32 test-all-64 test-mlton test-polyml test-mosml test-smlsharp, test-manticore test-mlkit
-	@echo 32-bit tasks: test-mlton test-polyml test-mosml test-smlsharp test-mlkit test-smlnj (incomplete)
+	@echo 32-bit tasks: test-mlton test-polyml test-mosml (test-smlsharp) test-mlkit test-smlnj (incomplete)
 	@echo 64-bit tasks: test-mlton test-polyml test-mosml test-smlsharp test-manticore
 
 %.c: %.c.in
@@ -70,7 +70,7 @@ rmath-mosml.sml: rmath-template.m4 rmath-sig.sml rmath-mosml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D DLLNAME=${DLLNAME} rmath-mosml.sml.in > rmath-mosml.sml
 
 # testing
-test-all-32: test-mlton test-mlkit
+test-all-32: test-mlton test-polyml test-mlkit test-smlnj
 
 test-all-64: test-mlton test-polyml test-mosml test-smlsharp test-manticore
 
