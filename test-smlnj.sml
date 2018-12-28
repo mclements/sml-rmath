@@ -15,6 +15,7 @@ fun main() =
 	val x = Rmath.poisson_test(10.0,8.0,1.0, Rmath.TwoSided)
 	val _ = print(Real.toString(x) ^"\n")
     in
-	()
+	Rmath.stop()
     end
 end
+val _ = Test.main()

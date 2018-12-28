@@ -57,7 +57,7 @@ mosml: librmath-mosml.so
 
 smlnj: rmath-smlnj.sml nlffi
 
-nlffi: f-Rf_log1pexp.sml
+nlffi:
 	ml-nlffigen -d smlnj -add ../smlnj-libh.sml -DMATHLIB_STANDALONE Rmath-nlffigen.h
 
 manticore: rmath-template.m4 rmath-manticore.pml
