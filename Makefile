@@ -22,7 +22,7 @@ LIBRMATH = $(shell pkg-config --variable=libdir libRmath)/libRmath$(DLLEXT)
 DLLNAME := librmath-mosml$(DLLEXT)
 
 all:
-	@echo Available tasks include: test-all test-mlton test-polyml test-mosml test-smlsharp 
+	@echo Available tasks include: test-all-32 test-all-64 test-mlton test-polyml test-mosml test-smlsharp 
 
 %.c: %.c.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} $< > $*.c
@@ -63,8 +63,9 @@ rmath-mosml.sml: rmath-template.m4 rmath-sig.sml rmath-mosml.sml.in
 	${M4} ${M4FLAGS} ${M4SCRIPT} -D DLLNAME=${DLLNAME} rmath-mosml.sml.in > rmath-mosml.sml
 
 # testing
+test-all-32: test-mlton test-mlkit
 
-test-all: test-mlton test-polyml test-mosml test-smlsharp test-manticore
+test-all-64: test-mlton test-polyml test-mosml test-smlsharp test-manticore
 
 test-mlton: mlton rmath-sig.sml rmath-mlton.sml test-main.sml test-call-main.sml test-mlton.mlb
 	mlton -default-ann 'allowFFI true' -link-opt '-lRmath' test-mlton.mlb
