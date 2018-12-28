@@ -9,6 +9,8 @@ README.tex
 auto
 *.so
 *.o
+*.a
+*.dll
 rmath-mosml.sml
 rmath-mosml.c
 rmath-smlsharp.sml
@@ -19,3 +21,5 @@ rmath-mosml-sig.sml
 rmath-sig.sml
 rmath-manticore.pml
 rmath-manticore.s
+rmath-mlkit.sml
+rmath-mlkit.c
