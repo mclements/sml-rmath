@@ -92,6 +92,16 @@ test-manticore: manticore
 	./a.out
 	rm a.out
 
+mlkit: rmath-mlkit.c
+	gcc -DTAG_VALUES -DENABLE_GC -c rmath-mlkit.c ${CFLAGS} -I/usr/local/share/mlkit/include -o libRmathmlkit.a
+
+test-mlkit: mlkit test-mlkit.mlb
+	mlkit -gc -o test-mlkit --libdirs "." --libs "m,c,dl,Rmathmlkit,Rmath" test-mlkit.mlb
+	./test-mlkit
+	rm test-mlkit
+
+test-mlkit.mlb: rmath-mlkit.sml test-main.sml test-call-main.sml rmath-sig.sml
+
 clean:
 	rm -f rmath-mlton rmath-mlton.sml
 	rm -f rmath-polyml rmath-polyml.sml

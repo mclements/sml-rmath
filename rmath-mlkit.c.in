@@ -1,0 +1,113 @@
+#include <sys/types.h>
+#include <dirent.h>
+
+#define MATHLIB_STANDALONE
+#include <Rmath.h>
+#include <Tagging.h>
+
+#define log1pexp Rf_log1pexp
+
+divert(`-1')dnl
+
+define(`MLKIT_CONVERT',`ifelse($2,double,convertRealToC($1),convertIntToC($1))')
+define(`CONSTANT',`// constant $2 defined in SML code')
+define(`FUNCTION0',`int mlkit_$2(int res) {
+	 double _y = $2();
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+define(`FUNCTION1',`int mlkit_$2(int res, int $4) {
+	 $3 base_$4 = MLKIT_CONVERT($4,$3);
+	 double _y = $2(base_$4);
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+define(`FUNCTION2',`int mlkit_$2(int res, int $4, int $6) {
+	 $3 base_$4 = MLKIT_CONVERT($4,$3);
+	 $5 base_$6 = MLKIT_CONVERT($6,$5);
+	 double _y = $2(base_$4, base_$6);
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+define(`FUNCTION3',`int mlkit_$2(int res, int $4, int $6, int $8) {
+	 $3 base_$4 = MLKIT_CONVERT($4,$3);
+	 $5 base_$6 = MLKIT_CONVERT($6,$5);
+	 $7 base_$8 = MLKIT_CONVERT($8,$7);
+	 double _y = $2(base_$4, base_$6, base_$8);
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+define(`FUNCTION4',`int mlkit_$2(int res, int $4, int $6, int $8, int $10) {
+	 $3 base_$4 = MLKIT_CONVERT($4,$3);
+	 $5 base_$6 = MLKIT_CONVERT($6,$5);
+	 $7 base_$8 = MLKIT_CONVERT($8,$7);
+	 $9 base_$10 = MLKIT_CONVERT($10,$9);
+	 double _y = $2(base_$4, base_$6, base_$8, base_$10);
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+define(`FUNCTION5',`int mlkit_$2(int res, int $4, int $6, int $8, int $10, int $12) {
+	 $3 base_$4 = MLKIT_CONVERT($4,$3);
+	 $5 base_$6 = MLKIT_CONVERT($6,$5);
+	 $7 base_$8 = MLKIT_CONVERT($8,$7);
+	 $9 base_$10 = MLKIT_CONVERT($10,$9);
+	 $11 base_$12 = MLKIT_CONVERT($12,$11);
+	 double _y = $2(base_$4, base_$6, base_$8, base_$10, base_$12);
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+define(`FUNCTION6',`int mlkit_$2(int res, int $4, int $6, int $8, int $10, int $12, int $14) {
+	 $3 base_$4 = MLKIT_CONVERT($4,$3);
+	 $5 base_$6 = MLKIT_CONVERT($6,$5);
+	 $7 base_$8 = MLKIT_CONVERT($8,$7);
+	 $9 base_$10 = MLKIT_CONVERT($10,$9);
+	 $11 base_$12 = MLKIT_CONVERT($12,$11);
+	 $13 base_$14 = MLKIT_CONVERT($14,$13);
+	 double _y = $2(base_$4, base_$6, base_$8, base_$10, base_$12, base_$14);
+	 convertRealToML(_y,res);
+	 return res;
+       }')
+divert(`1')
+include(`rmath-template.m4')dnl
+int mlkit_imin2(int res, int a, int b) {
+	 int base_a = MLKIT_CONVERT(a,int);
+	 int base_b = MLKIT_CONVERT(b,int);
+	 int _y = imin2(base_a, base_b);
+	 res = convertIntToML(_y);
+	 return res;
+       }
+int mlkit_imax2(int res, int a, int b) {
+  int base_a = MLKIT_CONVERT(a,int);
+  int base_b = MLKIT_CONVERT(b,int);
+  int _y = imax2(base_a, base_b);
+  res = convertIntToML(_y);
+  return res;
+}
+int mlkit_set_seed(int res, int a, int b) {
+  int base_a = MLKIT_CONVERT(a,int);
+  int base_b = MLKIT_CONVERT(b,int);
+  set_seed(base_a, base_b);
+  res = mlUNIT;
+  return res;
+}
+// val get_seed: unit -> int *int
+int mlkit_get_seed(int newPair) {
+  int base_a = 0;
+  int base_b = 0;
+  get_seed(&base_a, &base_b);
+  int a = convertIntToML(base_a);
+  int b = convertIntToML(base_b);
+  elemRecordML(newPair, 0) = a;
+  elemRecordML(newPair, 1) = b;
+  return newPair;
+}
+/* int mlkit_lgammafn_sign(int newPair, int x) { */
+/*   int a, sign = 0; */
+/*   double base_x = convertRealToC(x); */
+/*   double _y = lgammafn_sign(base_x, &sign); */
+/*   convertRealToML(_y,a); */
+/*   sign = convertIntToML(sign); */
+/*   first(newPair) = a; */
+/*   second(newPair) = sign; */
+/*   return newPair; */
+/* } */
