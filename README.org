@@ -456,7 +456,7 @@ val imax2 : int * int -> int
 val imin2 : int * int -> int
 (* log(1 + exp(x)). log1pexp(x) *)
 val log1pexp : real -> real
-(* Normal cumulative density function. pnorm5(q,mean,sd,lower,log) *)
+(* Normal cumulative density function. pnorm(q,mean,sd,lower,log) *)
 val pnorm : real * real * real * int * int -> real
 (* Normal quantile function. qnorm(p,mean,sd,lower,log) *)
 val qnorm : real * real * real * int * int -> real
