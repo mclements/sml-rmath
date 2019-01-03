@@ -26,21 +26,13 @@ Aside from the SML implementations, this library also requires the [[https://pac
 
 For installation in [[http://mosml.org/][MosML]], the user may need to change the path to the headers (currently =/usr/local/include/mosml=). 
 
-For installation in [[http://manticore.cs.uchicago.edu/][Manticore]], the initial configure command will need to be pass the =LIBS= variable as =-lRmath= (e.g. =LIBS = -lRmath ./configure=)
-
-
-* Limitations and extensions
-
-Manticore does not implement some of the functions (e.g. =set_seed= and =get_seed=).
+For installation in [[http://manticore.cs.uchicago.edu/][Manticore]], the initial configure command will need to be pass the =LIBS= variable as =-lRmath= (e.g. =LIBS = -lRmath ./configure=). Manticore does not implement some of the functions (e.g. =set_seed= and =get_seed=).
 
 The 32 bit implementation for SML# is untested, as I was unable to compile SML# on Ubuntu 18.04 due to the requirement for llvm-3.7.
 
-It may be interesting from a historical perspective to extend this library to AliceML and Moby.
-
-
 * Test output
 
-#+BEGIN_SRC bash :exports both :results org
+#+BEGIN_SRC sh :exports both :results org
 echo NOTE: see main tasks using 'make'
 make
 echo NOTE: tidy up
@@ -48,13 +40,13 @@ make clean
 echo NOTE: show the test code
 cat test-main.sml
 echo NOTE: generate code and run all of the tests
-make test-all
+make test-all-32
 #+END_SRC
 
 #+RESULTS:
 #+BEGIN_SRC org
 NOTE: see main tasks using make
-Available tasks include: test-all test-mlton test-polyml test-mosml test-smlsharp
+Available tasks include: test-all-32 test-all-64 test-mlton test-polyml test-mosml test-smlsharp, test-manticore test-mlkit
 NOTE: tidy up
 rm -f rmath-mlton rmath-mlton.sml
 rm -f rmath-polyml rmath-polyml.sml
@@ -63,6 +55,8 @@ rm -f *.o rmath-smlsharp.sml rmath-smlsharp.smi
 rm -f a.out
 rm -f rmath-sig.sml
 rm -f rmath-manticore.pml rmath-manticore.s
+rm -f rmath-mlkit.c rmath-mlkit.sml
+# rm -rf smlnj
 NOTE: show the test code
 fun main() =
     let
@@ -75,7 +69,7 @@ fun main() =
 	val _ = print(Int.toString(Array.sub(y,0)) ^"\n")
 	val _ = print(Int.toString(Array.sub(y,1)) ^"\n")
 	val _ = print(Int.toString(Array.sub(y,2)) ^"\n")
-	val x = Rmath.poisson_test(10.0,12.0,1.0, Rmath.TwoSided)
+ 	val x = Rmath.poisson_test(10.0,12.0,1.0, Rmath.TwoSided)
 	val _ = print(Real.toString(x) ^"\n")
 	val x = Rmath.poisson_test(10.0,8.0,1.0, Rmath.TwoSided)
 	val _ = print(Real.toString(x) ^"\n")
@@ -104,10 +98,16 @@ poly --script test-polyml.sml
 699
 0.665693785434
 0.474611803353
-m4   rmath-mosml.c.in > rmath-mosml.c
-m4   -D DLLNAME=librmath-mosml.so rmath-mosml.sml.in > rmath-mosml.sml
-cc -I/usr/local/include/mosml -I/usr/share/R/include -fPIC -shared -o librmath-mosml.so rmath-mosml.c -lRmath -lm
-mosml -quietdec test-mosml.sml
+m4   rmath-mlkit.c.in > rmath-mlkit.c
+gcc -DTAG_VALUES -DENABLE_GC -c rmath-mlkit.c -I/usr/local/include/mosml -I/usr/share/R/include -fPIC -I/usr/local/share/mlkit/include -o libRmathmlkit.a
+m4   rmath-mlkit.sml.in > rmath-mlkit.sml
+mlkit -gc -o test-mlkit --libdirs "." --libs "m,c,dl,Rmathmlkit,Rmath" test-mlkit.mlb
+[reading source file:	rmath-sig.sml]
+[reading source file:	rmath-mlkit.sml]
+[wrote X86 code file:	MLB/RI_GC/rmath-mlkit.sml.s]
+[wrote X86 code file:	MLB/RI_GC/base-link_objects.s]
+[wrote executable file:	test-mlkit]
+./test-mlkit
 1.95996398454
 0.69314718056
 89
@@ -115,13 +115,180 @@ mosml -quietdec test-mosml.sml
 699
 0.665693785434
 0.474611803353
-m4   rmath-smlsharp.sml.in > rmath-smlsharp.sml
-m4   rmath-smlsharp.smi.in > rmath-smlsharp.smi
-smlsharp -c -o rmath-smlsharp.o rmath-smlsharp.sml
-smlsharp -c -o test-main.o test-main.sml
-smlsharp -c -o test-smlsharp.o test-smlsharp.sml
-smlsharp -o test-smlsharp test-smlsharp.smi -lRmath -lm
-./test-smlsharp
+rm test-mlkit
+ml-nlffigen -d smlnj -add ../smlnj-libh.sml -DMATHLIB_STANDALONE Rmath-nlffigen.h
+sml @SMLquiet -m test-smlnj.cm
+Standard ML of New Jersey v110.79 [built: Tue Aug  8 23:22:33 2017]
+[scanning test-smlnj.cm]
+[library $c/internals/c-int.cm is stable]
+[scanning (test-smlnj.cm):./smlnj/nlffi-generated.cm]
+[library $SMLNJ-BASIS/basis.cm is stable]
+[library $SMLNJ-BASIS/(basis.cm):basis-common.cm is stable]
+[library $c/memory/memory.cm is stable]
+[parsing (test-smlnj.cm):./rmath-sig.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):../smlnj-libh.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-7.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-7.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-df.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-9.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-9.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-16.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-16.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pf.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-17.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-17.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qf.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-1.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-1.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rf.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-6.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-6.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-11.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-11.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-unif_rand.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-norm_rand.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dwilcox.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qweibull.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dweibull.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pnbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pnchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rcauchy.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-lgamma1p.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-lgammafn.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pweibull.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pwilcox.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rnbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rnchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-R_pow.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-cospi.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dgeom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dpois.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dunif.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-fmax2.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-fmin2.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-fprec.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-fsign.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-13.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-13.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-imax2.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-imin2.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-lbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pgeom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-ppois.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-punif.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qgeom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qpois.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qunif.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rgeom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rnorm.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rpois.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-runif.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-sinpi.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-tanpi.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-8.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-8.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dnf.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dnt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-18.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-18.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pnf.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pnt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qnf.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qnt.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-gammafn.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rwilcox.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-lchoose.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qcauchy.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rsignrank.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-choose.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dgamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dhyper.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dlnorm.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dlogis.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-2.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-2.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-R_pow_di.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dnbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dnorm4.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qsignrank.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-fround.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-ftrunc.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-trigamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dcauchy.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-tetragamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pentagamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qnbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qnchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-exp_rand.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-log1pmx.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-logspace_add.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-logspace_sub.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-psignrank.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-beta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dexp.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pexp.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qexp.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rexp.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-sign.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-20.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-20.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rmultinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-digamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dsignrank.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-3.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-3.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-bessel_i.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-bessel_j.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-bessel_k.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-bessel_y.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pgamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-phyper.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):callop-14.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):fptr-rtti-14.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-lgammafn_sign.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-plnorm.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-plogis.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pnbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pnorm5.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-ptukey.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qgamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qhyper.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qlnorm.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qlogis.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qnbeta.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qnorm5.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qtukey.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-qwilcox.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rgamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rhyper.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rlnorm.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rlogis.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dnbinom.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-dnchisq.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-psigamma.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-pcauchy.sml]
+[loading (test-smlnj.cm):./smlnj/(nlffi-generated.cm):f-rweibull.sml]
+[loading (test-smlnj.cm):./rmath-smlnj.sml]
+[loading (test-smlnj.cm):./test-smlnj.sml]
+$Execute: required privileges are:
+  c-int
+  primitive
 1.95996398454
 0.69314718056
 89
@@ -129,18 +296,6 @@ smlsharp -o test-smlsharp test-smlsharp.smi -lRmath -lm
 699
 0.665693785434
 0.474611803353
-rm test-smlsharp
-m4   rmath-manticore.pml.in > rmath-manticore.pml
-pmlc rmath-manticore.pml
-./a.out
-1.9599639845
-0.6931471806
-89
-212
-699
-0.6656937854
-0.4746118034
-rm a.out
 #+END_SRC
 
 
